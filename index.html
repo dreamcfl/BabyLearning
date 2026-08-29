@@ -1,11 +1,90 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>宝宝识字台 · BabyLearning</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html { font-size: 18px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(135deg, #FFF9E6 0%, #FFE8CC 100%);
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .card {
+      max-width: 520px; width: 100%;
+      background: #fff; border-radius: 28px;
+      padding: 40px 28px;
+      box-shadow: 0 12px 40px rgba(255, 140, 66, 0.18);
+      text-align: center;
+    }
+    .logo { font-size: 4.5rem; line-height: 1; margin-bottom: 12px; }
+    h1 {
+      font-size: 2rem; font-weight: 800; color: #E6731C;
+      margin-bottom: 8px; letter-spacing: 1px;
+    }
+    .sub {
+      font-size: 0.95rem; color: #888; margin-bottom: 24px;
+    }
+    .features {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 10px; margin-bottom: 28px; text-align: left;
+    }
+    .feat {
+      background: #FFF9F0; border-radius: 14px;
+      padding: 12px; font-size: 0.88rem; color: #4A4A4A;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .feat .em { font-size: 1.4rem; }
+    .btn {
+      display: block; width: 100%;
+      background: linear-gradient(135deg, #FF8C42 0%, #E6731C 100%);
+      color: #fff; text-decoration: none;
+      padding: 18px 0; border-radius: 50px;
+      font-size: 1.2rem; font-weight: 800; letter-spacing: 2px;
+      box-shadow: 0 6px 18px rgba(230, 115, 28, 0.35);
+      transition: transform 0.15s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .tip {
+      margin-top: 18px; font-size: 0.82rem; color: #B0A89B;
+      line-height: 1.6;
+    }
+    .tip strong { color: #E6731C; }
+    @media (max-width: 480px) {
+      html { font-size: 16px; }
+      .card { padding: 32px 22px; }
+      h1 { font-size: 1.7rem; }
+    }
+  </style>
 </head>
 <body>
-    <a href="./宝宝识字台.html">宝宝识字台</a>
+  <main class="card">
+    <div class="logo">📖</div>
+    <h1>宝宝识字台</h1>
+    <div class="sub">专为 4–6 岁设计的趣味识字小工具</div>
+
+    <div class="features">
+      <div class="feat"><span class="em">🀄</span><span>277 个分级汉字</span></div>
+      <div class="feat"><span class="em">🔊</span><span>真人朗读发音</span></div>
+      <div class="feat"><span class="em">✏️</span><span>笔顺动画 + 描红</span></div>
+      <div class="feat"><span class="em">🎮</span><span>三大趣味游戏</span></div>
+      <div class="feat"><span class="em">⭐</span><span>积分 + 奖励商城</span></div>
+      <div class="feat"><span class="em">📱</span><span>手机 / 平板通用</span></div>
+    </div>
+
+    <a class="btn" href="./宝宝识字台.html">开始学习 →</a>
+
+    <div class="tip">
+      💡 首次打开建议用 <strong>Chrome / Safari</strong><br>
+      ⚠️ 笔顺动画需联网，数据存浏览器本地
+    </div>
+  </main>
 </body>
 </html>
