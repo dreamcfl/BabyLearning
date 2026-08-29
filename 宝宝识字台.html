@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>宝宝识字台</title>
@@ -165,9 +165,10 @@ body {
   border: 3px solid var(--orange-light); border-radius: var(--radius);
   aspect-ratio: 1; cursor: pointer; position: relative; overflow: hidden;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: background-color 0.15s, border-color 0.15s;
 }
-.char-card:active { transform: scale(0.94); }
+/* 用亮度反馈代替缩放，避免移动端点击时元素被感知为变大 */
+.char-card:active { filter: brightness(0.94); }
 .char-card.learned { border-color: var(--green); background: linear-gradient(135deg, #F3FFF3 0%, #E6F9E6 100%); }
 .char-card .ch-emoji { font-size: 1.5rem; line-height: 1; }
 .char-card .ch-big { font-size: 2.6rem; font-weight: 900; color: var(--orange-dark); line-height: 1.05; }
@@ -204,6 +205,11 @@ body {
 }
 .btn-speak:hover { background: var(--teal-dark); }
 .btn-speak.speaking { animation: pulse 1s infinite; }
+/* 喇叭引导：让孩子知道要主动点 */
+.speak-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; }
+.speak-tip {
+  font-size: 0.7rem; color: var(--teal-dark); font-weight: 700; white-space: nowrap;
+}
 @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(78,205,196,0.6)} 50%{box-shadow:0 0 0 12px rgba(78,205,196,0)} }
 .btn-speak svg { width: 28px; height: 28px; }
 
@@ -304,9 +310,10 @@ body {
   background: linear-gradient(135deg, #FFFDF7 0%, #FFF6E8 100%);
   border: 3px solid var(--orange-light); border-radius: var(--radius);
   aspect-ratio: 1; cursor: pointer; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 2px; transition: transform 0.15s;
+  align-items: center; justify-content: center; gap: 2px;
+  transition: background-color 0.15s, border-color 0.15s;
 }
-.opt-card:active { transform: scale(0.94); }
+.opt-card:active { filter: brightness(0.94); }
 .opt-card .oc-emoji { font-size: 1.3rem; line-height: 1; }
 .opt-card .oc-char { font-size: 2.4rem; font-weight: 900; color: var(--orange-dark); line-height: 1.05; }
 .opt-card .oc-pinyin { font-size: 0.72rem; color: var(--teal-dark); font-weight: 700; }
@@ -332,9 +339,15 @@ body {
   aspect-ratio: 1; border-radius: var(--radius-sm); cursor: pointer;
   background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
   display: flex; align-items: center; justify-content: center; position: relative;
-  transition: transform 0.2s;
+  transition: background-color 0.2s, border-color 0.2s;
+  /* 关键：禁止双击缩放导致的元素放大，禁用移动端点击高亮 */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
-.mcard:active { transform: scale(0.94); }
+/* 只做颜色反馈，不做 transform 缩放（缩放易被误判为元素变大） */
+.mcard:active { filter: brightness(0.92); }
 .mcard .mface {
   font-size: 1.6rem; color: #fff; font-weight: 900; line-height: 1;
   display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
@@ -487,6 +500,17 @@ body {
 .celebrate-box .stars { font-size: 3rem; margin-bottom: 8px; }
 .celebrate-box h3 { font-size: 1.5rem; color: var(--orange); margin-bottom: 8px; }
 .celebrate-box .points-gain { font-size: 1.2rem; color: var(--green); font-weight: 800; margin-bottom: 16px; }
+
+/* ========== 移动端触摸优化 ========== */
+/* 禁止双击缩放与长按选中，避免点击时元素被放大/弹出菜单 */
+.char-card, .opt-card, .mcard, .game-tab, .stage-tab, .word-chip,
+.btn-speak, .big-speak, .btn-stroke, .btn-go, .btn-redeem,
+.mode-tab, .btn-icon, .detail-close, .practice-next {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
 
 .hidden { display: none !important; }
 @media (max-width: 480px) {
@@ -904,6 +928,20 @@ if (window.speechSynthesis) {
   speechSynthesis.onvoiceschanged = initVoice;
 }
 
+// iOS Safari 首次必须由真实用户手势触发语音，否则后续调用全部静默失败。
+// 这里在用户第一次触摸页面时用静音语句「解锁」语音引擎。
+let voiceUnlocked = false;
+function unlockVoice() {
+  if (voiceUnlocked || !window.speechSynthesis) return;
+  try {
+    const u = new SpeechSynthesisUtterance(' ');
+    u.volume = 0;
+    u.lang = 'zh-CN';
+    speechSynthesis.speak(u);
+    voiceUnlocked = true;
+  } catch(e) { /* 忽略 */ }
+}
+
 function speak(text, rate) {
   if (!voiceOn) return;
   if (!window.speechSynthesis) return;
@@ -923,6 +961,9 @@ function speakWithFeedback(btn, text) {
   speak(text);
   if (!btn) return;
   btn.classList.add('speaking');
+  // 听过之后隐藏「点我读」引导
+  const tip = btn.parentElement && btn.parentElement.querySelector('.speak-tip');
+  if (tip) tip.style.display = 'none';
   const ms = Math.max(900, text.length * 420);
   setTimeout(() => btn.classList.remove('speaking'), ms);
 }
@@ -1207,11 +1248,14 @@ function openCharDetail(idx) {
         <div class="d-pinyin">${c.pinyin}</div>
         <div class="d-meaning">${c.meaning}</div>
       </div>
-      <button class="btn-speak" id="speakCharBtn" onclick="speakWithFeedback(this,'${c.char}')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-        </svg>
-      </button>
+      <div class="speak-wrap">
+        <button class="btn-speak" id="speakCharBtn" onclick="speakWithFeedback(this,'${c.char}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+        </button>
+        <span class="speak-tip">点我读</span>
+      </div>
     </div>
 
     <div class="stroke-wrap">
@@ -1244,8 +1288,8 @@ function openCharDetail(idx) {
 
   overlay.classList.add('show');
   renderStrokeBox(c.char);
-  // 打开自动读一遍
-  setTimeout(() => speak(c.char), 300);
+  // 不自动朗读：移动端浏览器要求语音必须由用户手势触发，
+  // 自动调用会被静默拦截。由孩子点右上角喇叭按钮主动播放。
 }
 
 function speakWord(btn, w) {
@@ -1359,13 +1403,14 @@ function renderQuizGame(type) {
 
   let head = '';
   if (type === 'listen') {
-    // 不显示答案字形，只能靠听
+    // 不显示答案字形，只能靠听。
+    // 注意：移动端浏览器禁止非用户手势触发语音，故不自动播放，提示孩子点喇叭。
     head = `<button class="big-speak" id="bigSpeak" onclick="replayAudio()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
         </svg>
       </button>
-      <div class="replay-tip">点喇叭可以再听一次</div>`;
+      <div class="replay-tip" id="replayTip">👆 点一下喇叭，听一听是哪个字</div>`;
   } else {
     // 显示 emoji + 一个组词提示，不显示答案字形
     head = `<div class="pic-big">${answer.emoji}</div>
@@ -1390,8 +1435,7 @@ function renderQuizGame(type) {
   </div>`;
 
   document.getElementById('practiceBadge').textContent = `${done.size}/${taskChars.length}`;
-  // 听音选字自动播放一次
-  if (type === 'listen') setTimeout(replayAudio, 350);
+  // 听音选字不自动播放：移动端浏览器要求语音必须由用户手势触发
 }
 
 function replayAudio() {
@@ -1403,6 +1447,9 @@ function replayAudio() {
     btn.classList.add('pulsing');
     setTimeout(() => btn.classList.remove('pulsing'), 900);
   }
+  // 播放后把提示换成「再听一次」
+  const tip = document.getElementById('replayTip');
+  if (tip) tip.textContent = '🔁 再听一次？点这里';
 }
 
 function pickOption(el, idx) {
@@ -1950,6 +1997,11 @@ document.addEventListener('DOMContentLoaded', function() {
   voiceOn = load(K.voice, true);
   speechRate = load(K.rate, 0.75);
   updateVoiceBtn();
+
+  // iOS：首次真实触摸时解锁语音引擎（mount 一次即可）
+  const unlockOnce = () => { unlockVoice(); document.removeEventListener('touchend', unlockOnce); document.removeEventListener('click', unlockOnce); };
+  document.addEventListener('touchend', unlockOnce, { once: true });
+  document.addEventListener('click', unlockOnce, { once: true });
 
   document.querySelectorAll('.pin-input').forEach((inp, i, arr) => {
     inp.addEventListener('input', function() {
