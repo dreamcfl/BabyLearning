@@ -114,7 +114,10 @@ body {
 .today-item:last-child { margin-bottom: 0; }
 .today-item.overdue { border-left: 4px solid var(--red); }
 .today-item.today { border-left: 4px solid var(--orange); }
-.today-item-text { flex: 1; line-height: 1.4; }
+.today-item-text {
+  flex: 1; line-height: 1.4; min-width: 0;            /* flex 子项可被压缩 */
+  word-break: break-all; overflow-wrap: anywhere;   /* 文字过长时优雅换行，不撑爆按钮 */
+}
 .today-item-text .tag-overdue, .today-item-text .tag-today {
   display: inline-block; color: #fff; font-size: 0.7rem; padding: 2px 6px;
   border-radius: 4px; margin-right: 6px; font-weight: 700;
@@ -155,7 +158,11 @@ body {
   transition: all 0.2s; border-bottom-width: 4px;
 }
 .stage-tab.active { background: var(--orange); border-color: var(--orange-dark); color: #fff; }
-.stage-tab .st-name { font-size: 0.95rem; font-weight: 800; line-height: 1.3; }
+.stage-tab .st-name {
+  font-size: 0.95rem; font-weight: 800; line-height: 1.3;
+  white-space: nowrap;       /* 阶段名不换行（4-6 字一格足够） */
+  overflow: hidden; text-overflow: ellipsis;   /* 极端长名才省略 */
+}
 .stage-tab .st-prog { font-size: 0.72rem; opacity: 0.85; margin-top: 2px; }
 
 /* ========== 字卡网格（4-6岁：大字号 + 图） ========== */
@@ -275,6 +282,7 @@ body {
   padding: 8px 4px; font-size: 0.82rem; font-weight: 700; cursor: pointer; color: var(--text-light);
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   min-height: 52px; justify-content: center; transition: all 0.2s;
+  white-space: nowrap;        /* 游戏名不换行 */
 }
 .game-tab .gt-icon { font-size: 1.15rem; line-height: 1; }
 .game-tab.active { background: var(--teal); border-color: var(--teal-dark); color: #fff; }
@@ -305,18 +313,29 @@ body {
 .pic-word { font-size: 0.95rem; color: var(--text-light); margin-bottom: 12px; font-weight: 600; }
 
 /* 选项卡片（4 选 1） */
-.opt-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 340px; margin: 0 auto; }
+.opt-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 360px; margin: 0 auto; }
 .opt-card {
   background: linear-gradient(135deg, #FFFDF7 0%, #FFF6E8 100%);
   border: 3px solid var(--orange-light); border-radius: var(--radius);
-  aspect-ratio: 1; cursor: pointer; display: flex; flex-direction: column;
+  /* 去掉 aspect-ratio 正方形约束，改为扁矩形，避免字放大后卡片被撑得又高又空 */
+  min-height: 84px; cursor: pointer;
+  display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 2px;
+  padding: 8px 4px;
   transition: background-color 0.15s, border-color 0.15s;
 }
 .opt-card:active { filter: brightness(0.94); }
-.opt-card .oc-emoji { font-size: 1.3rem; line-height: 1; }
-.opt-card .oc-char { font-size: 2.4rem; font-weight: 900; color: var(--orange-dark); line-height: 1.05; }
-.opt-card .oc-pinyin { font-size: 0.72rem; color: var(--teal-dark); font-weight: 700; }
+.opt-card .oc-emoji { font-size: 1.4rem; line-height: 1; }
+.opt-card .oc-char {
+  font-size: 2.6rem; font-weight: 900; color: var(--orange-dark);
+  line-height: 1;                         /* 紧凑行高，减少上下留白 */
+  letter-spacing: 1px;                    /* 字间距稍宽，更醒目 */
+}
+.opt-card .oc-pinyin {
+  font-size: 0.85rem; color: var(--teal-dark); font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.5px;
+}
 .opt-card.correct {
   border-color: var(--green); background: linear-gradient(135deg,#D4EDDA,#C3E6CB);
   animation: bounce 0.4s;
@@ -518,7 +537,10 @@ body {
   .container { padding: 12px; }
   .char-grid { grid-template-columns: repeat(3, 1fr); }
   .opt-grid { gap: 10px; }
-  .opt-card .oc-char { font-size: 2.1rem; }
+  .opt-card { min-height: 76px; padding: 6px 4px; }
+  .opt-card .oc-char { font-size: 2.3rem; }
+  .opt-card .oc-pinyin { font-size: 0.76rem; }
+  .opt-card .oc-emoji { font-size: 1.25rem; }
   .big-speak { width: 84px; height: 84px; }
   .big-speak svg { width: 38px; height: 38px; }
   .pic-big { width: 110px; height: 110px; font-size: 4.2rem; }
@@ -707,7 +729,24 @@ body {
         </div>
         <div class="setting-row">
           <span class="setting-label">朗读语速</span>
-          <div class="setting-control"><input type="number" id="rateSetting" min="0.5" max="1.2" step="0.1" value="0.75" onchange="saveRateSetting()"></div>
+          <div class="setting-control"><input type="number" id="rateSetting" min="0.4" max="1.2" step="0.05" value="0.6" onchange="saveRateSetting()"></div>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">发音人</span>
+          <div class="setting-control">
+            <select id="voiceSelect" onchange="saveVoiceUri()" style="max-width:180px;"></select>
+          </div>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">试听效果</span>
+          <div class="setting-control">
+            <button class="btn-small btn-confirm" onclick="testVoice()">▶ 播放试试</button>
+          </div>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text-light);line-height:1.5;padding-top:6px;">
+          本应用只使用<strong>普通话</strong>发音，已自动排除粤语等方言。
+          若声音不好听，可切换发音人并试听：iPhone 建议「Ting-Ting / 婷婷」，
+          Windows 建议「Microsoft Xiaoxiao / Yunxi」。
         </div>
       </div>
 
@@ -914,18 +953,140 @@ function getStageChars(stage) { return CHAR_DB.filter(c => c.stage === Number(st
 // ============================================================
 // 语音朗读（Web Speech API，零依赖）
 // ============================================================
-let zhVoice = null;
+let zhVoice = null;        // 当前使用的语音对象
+let zhVoiceList = [];      // 所有可用普通话语音（供家长选择）
+let zhVoiceFallback = false; // 设备无普通话语音时，是否退化为任意中文
 let voiceOn = true;
-let speechRate = 0.75;
+let speechRate = 0.6;    // 默认慢速，4-6 岁听得清
+let speechPitch = 1.0;   // 自然音调（不再拔高，避免声音尖锐失真）
 
+/**
+ * 中文语音优先级排序
+ * @description 不同系统自带的中文音质差异巨大，按口碑从优到劣排列，
+ * 越靠前越可能是高质量女声；匹配不到时退化为任意中文语音。
+ */
+const VOICE_PRIORITY = [
+  // iOS / macOS 高质量中文（Ting-Ting 最自然）
+  'tingting', 'ting-ting', '婷婷',
+  // Windows 10/11 微软中文
+  'xiaoxiao', 'yunxi', 'yunyang', 'huihui', 'yaoyao', 'kangkang',
+  // Google 中文（Chrome / Android）
+  'google 普通话', 'google zh',
+  // Android 常见
+  'chinese', 'mandarin',
+];
+
+/**
+ * 判断是否为普通话语音
+ * @description 只认大陆普通话（zh-CN / zh-Hans / cmn-Hans），
+ * 明确排除粤语（zh-HK / zh-MO / yue-*）与台湾国语（zh-TW / zh-Hant），
+ * 避免孩子学到方言读音。
+ */
+function isMandarinVoice(v) {
+  const lang = (v.lang || '').toLowerCase().replace(/_/g, '-');
+  const name = (v.name || '').toLowerCase();
+
+  // 排除：粤语 / 台湾国语 / 繁体
+  if (/^yue|yue[-_]|zh-(hk|mo|tw|hant)|(cantonese|粵|粤|台語|閩南|客家)/i.test(lang + ' ' + name)) {
+    return false;
+  }
+  // 只认普通话：简体中文标记，或无地区限定的 zh / cmn
+  // 注意：不能强制锚定到结尾，否则 cmn-Hans-CN 这类三段式标签会被漏掉
+  if (/^zh(-(cn|hans))?(-|$)|^cmn(-(cn|hans))?(-|$)/.test(lang)) return true;
+  // 名称里显式标注普通话/简体
+  if (/(普通话|简体|mandarin|putonghua|chinese \(mainland\))/i.test(name)) return true;
+  return false;
+}
+
+/**
+ * 给语音打分（越高越优先）
+ * @description 组合三个维度：
+ *  1. 地区：大陆普通话 +3000（最优先，其他中文变体基本分）
+ *  2. 音源口碑：命中优先级表越靠前分越高
+ *  3. 本地语音优于网络语音
+ */
+function scoreVoice(v) {
+  let score = 0;
+  const lang = (v.lang || '').toLowerCase().replace(/_/g, '-');
+  const name = (v.name || '').toLowerCase();
+
+  // 1) 地区：大陆普通话最高
+  if (/^zh-(cn|hans)|^cmn(-(cn|hans))?(-|$)/.test(lang)) score += 3000;
+  else if (/^zh$/.test(lang)) score += 1500;
+
+  // 2) 音源口碑
+  for (let i = 0; i < VOICE_PRIORITY.length; i++) {
+    if (name.includes(VOICE_PRIORITY[i])) {
+      score += 1000 - i;
+      break;
+    }
+  }
+
+  // 3) 本地优于网络
+  if (v.localService) score += 100;
+  return score;
+}
+
+/** 扫描并挑选最佳中文语音；同时收集全部中文语音供家长切换 */
 function initVoice() {
   if (!window.speechSynthesis) return;
   const vs = speechSynthesis.getVoices();
-  zhVoice = vs.find(v => /zh[-_]CN|zh[-_]Hans|Chinese/i.test(v.lang + ' ' + v.name)) || null;
+  if (!vs || vs.length === 0) return false;
+
+  // 优先只用普通话语音
+  let pool = vs.filter(isMandarinVoice);
+  let fallbackUsed = false;
+
+  // 兜底：设备若完全没有普通话语音（极少见），退化为任意中文，保证有声音
+  if (pool.length === 0) {
+    pool = vs.filter(v => /zh|cmn|chinese|mandarin|中文|普通话/i.test(
+      (v.lang || '') + ' ' + (v.name || '')
+    ));
+    fallbackUsed = true;
+  }
+  if (pool.length === 0) return false;
+
+  // 按分数从高到低排序
+  pool.sort((a, b) => scoreVoice(b) - scoreVoice(a));
+  zhVoiceList = pool;
+  zhVoiceFallback = fallbackUsed;
+
+  // 若家长已手动选定过语音，优先沿用。
+  // 注意：本函数在脚本顶部就会被触发，此时 K / load 尚未定义，故直接读 localStorage。
+  let savedUri = '';
+  try { savedUri = localStorage.getItem('wb_babychar_voiceUri') || ''; } catch(e) {}
+  const saved = savedUri && pool.find(v => v.voiceURI === savedUri);
+  zhVoice = saved || pool[0];
+  return true;
 }
+
+/**
+ * 语音初始化（带异常保护）
+ * @description 任何异常都不能让语音功能整体失效，故统一 try/catch 兜底
+ */
+function initVoiceSafe() {
+  try {
+    return initVoice();
+  } catch(e) {
+    console.warn('语音初始化失败', e);
+    return false;
+  }
+}
+
+/** 语音列表在部分浏览器是异步就绪的，这里轮询等待（最多约 3 秒） */
+function ensureVoiceReady() {
+  if (!window.speechSynthesis) return;
+  if (initVoiceSafe()) return;
+  let tries = 0;
+  const timer = setInterval(() => {
+    tries++;
+    if (initVoiceSafe() || tries > 15) clearInterval(timer);
+  }, 200);
+}
+
 if (window.speechSynthesis) {
-  initVoice();
-  speechSynthesis.onvoiceschanged = initVoice;
+  ensureVoiceReady();
+  speechSynthesis.onvoiceschanged = ensureVoiceReady;
 }
 
 // iOS Safari 首次必须由真实用户手势触发语音，否则后续调用全部静默失败。
@@ -939,21 +1100,57 @@ function unlockVoice() {
     u.lang = 'zh-CN';
     speechSynthesis.speak(u);
     voiceUnlocked = true;
+    // iOS 偶发：speak 后处于 paused 状态，需显式 resume
+    setTimeout(() => {
+      try {
+        if (speechSynthesis.paused) speechSynthesis.resume();
+      } catch(e) {}
+    }, 100);
   } catch(e) { /* 忽略 */ }
 }
 
 function speak(text, rate) {
   if (!voiceOn) return;
-  if (!window.speechSynthesis) return;
+  if (!window.speechSynthesis || !text) return;
   try {
+    // 语音列表可能还没异步就绪，用前再尝试初始化一次
+    if (!zhVoice) initVoiceSafe();
+
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'zh-CN';
-    u.rate = rate || speechRate;   // 4-6 岁用慢速，听得清
-    u.pitch = 1.15;                 // 略高音调，更亲切
+    // 强制普通话：优先用所选发音人自带的 lang，否则固定 zh-CN
+    u.lang = (zhVoice && zhVoice.lang) ? zhVoice.lang : 'zh-CN';
+    u.rate = rate || speechRate;    // 慢速：4-6 岁听得清
+    u.pitch = speechPitch;          // 自然音调，避免尖锐失真
+    u.volume = 1;                   // 显式最大音量（iOS 偶发被静音）
     if (zhVoice) u.voice = zhVoice;
     speechSynthesis.speak(u);
-  } catch(e) { /* 静默失败，不影响学习 */ }
+  } catch(e) {
+    // 兜底再试一次：不带 voice，仅靠 lang，确保任何异常下都能出声
+    try {
+      const u2 = new SpeechSynthesisUtterance(text);
+      u2.lang = 'zh-CN';
+      u2.rate = rate || speechRate;
+      u2.volume = 1;
+      speechSynthesis.speak(u2);
+    } catch(e2) { /* 最终失败则忽略 */ }
+  }
+}
+
+/** 测试朗读：给家长试听当前发音人 */
+function testVoice() {
+  speak('你好，我们一起学汉字吧');
+}
+
+/** 切换发音人 */
+function saveVoiceUri() {
+  const uri = document.getElementById('voiceSelect').value;
+  const v = zhVoiceList.find(x => x.voiceURI === uri);
+  if (v) {
+    zhVoice = v;
+    save(K.voiceUri, uri);
+  }
+  speak('你好');
 }
 
 // 带按钮动画的朗读
@@ -1058,6 +1255,7 @@ const K = {
   stage: PREFIX + 'stage',
   voice: PREFIX + 'voice',
   rate: PREFIX + 'rate',
+  voiceUri: PREFIX + 'voiceUri',
 };
 
 function today() { return new Date().toISOString().slice(0,10); }
@@ -1178,7 +1376,7 @@ function renderStageTabs() {
     const stageChars = getStageChars(s);
     const learnedOfStage = stageChars.filter(c => isLearned(c.idx)).length;
     html += `<div class="stage-tab ${Number(s)===cur?'active':''}" onclick="switchStage(${s})">
-      <div class="st-name">${s}. ${RAW_DB[s].name}</div>
+      <div class="st-name">${RAW_DB[s].name}</div>
       <div class="st-prog">${learnedOfStage}/${stageChars.length}</div>
     </div>`;
   });
@@ -1783,6 +1981,23 @@ function renderParentPanel() {
   document.getElementById('voiceSetting').checked = voiceOn;
   document.getElementById('rateSetting').value = speechRate;
 
+  // 填充发音人下拉：语音列表可能异步就绪，这里再取一次
+  initVoiceSafe();
+  const vSel = document.getElementById('voiceSelect');
+  if (zhVoiceList.length === 0) {
+    vSel.innerHTML = '<option value="">（系统暂无中文发音人）</option>';
+  } else {
+    vSel.innerHTML = zhVoiceList.map(v => {
+      const tags = [];
+      if (!v.localService) tags.push('网络');
+      // 兜底模式下标注方言，提醒家长注意
+      if (zhVoiceFallback && !isMandarinVoice(v)) tags.push('非普通话');
+      const tag = tags.length ? `（${tags.join('·')}）` : '';
+      const cur = zhVoice && v.voiceURI === zhVoice.voiceURI ? 'selected' : '';
+      return `<option value="${v.voiceURI}" ${cur}>${v.name}${tag}</option>`;
+    }).join('');
+  }
+
   renderConfirmList();
   renderRewardManage();
 
@@ -1804,7 +2019,11 @@ function saveVoiceSetting() {
 }
 function saveRateSetting() {
   const v = parseFloat(document.getElementById('rateSetting').value);
-  if (v >= 0.5 && v <= 1.2) { speechRate = v; save(K.rate, v); }
+  if (v >= 0.4 && v <= 1.2) {
+    speechRate = v;
+    save(K.rate, v);
+    speak('你好');
+  }
 }
 function toggleVoice() {
   voiceOn = !voiceOn;
@@ -1995,8 +2214,11 @@ function renderKidMode() {
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
   voiceOn = load(K.voice, true);
-  speechRate = load(K.rate, 0.75);
+  // 默认语速调慢到 0.6；老用户若存过旧值也一并收敛到更慢的区间
+  const savedRate = load(K.rate, 0.6);
+  speechRate = Math.min(savedRate, 0.85);
   updateVoiceBtn();
+  ensureVoiceReady();
 
   // iOS：首次真实触摸时解锁语音引擎（mount 一次即可）
   const unlockOnce = () => { unlockVoice(); document.removeEventListener('touchend', unlockOnce); document.removeEventListener('click', unlockOnce); };
