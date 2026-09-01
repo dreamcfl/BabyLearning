@@ -805,75 +805,8 @@ let practiceState = {};
 let memoryState = { first: null, matches: 0, total: 0, locked: false, pairs: [] };
 
 // ============================================================
-// 兼容存储层（与 utils.js 打通）
+// 兼容存储层（直接复用 utils.js 中的 ChineseStore）
 // ============================================================
-const ChineseStore = {
-  prefix: 'wb_babychar_',
-  today() { return formatDate(new Date()); },
-  yesterday() { return formatDate(new Date(Date.now() - 86400000)); },
-  uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); },
-
-  getChinese() { return getSubjectData('chinese'); },
-  setChinese(data) { saveSubjectData('chinese', data); },
-
-  load(key, def) {
-    const ch = this.getChinese();
-    if (ch[key] !== undefined) return ch[key];
-    return def;
-  },
-  save(key, val) {
-    const ch = this.getChinese();
-    ch[key] = val;
-    this.setChinese(ch);
-  },
-
-  getStageCursor(stage) { return this.load('charCursor_s' + stage, 0); },
-  setStageCursor(stage, v) { this.save('charCursor_s' + stage, v); },
-
-  get daily() { return 'dailyCount'; },
-  get pin() { return 'pin'; },
-  get progress() { return 'progress'; },
-  get dailyLog() { return 'dailyLog'; },
-  get points() { return 'points'; },
-  get pointsHistory() { return 'pointsHistory'; },
-  get rewards() { return 'rewards'; },
-  get exchanges() { return 'exchanges'; },
-  get streak() { return 'streak'; },
-  get charCursor() { return 'charCursor'; },
-  get mode() { return 'mode'; },
-  get stage() { return 'stage'; },
-  get voice() { return 'voice'; },
-  get rate() { return 'rate'; },
-  get voiceUri() { return 'voiceUri'; },
-
-  getDailyCount() { return this.load(this.daily, 5); },
-  getCharCursor() { return this.load(this.charCursor, 0); },
-  getDailyLog() { return this.load(this.dailyLog, {}); },
-  getPointsHistory() { return this.load(this.pointsHistory, []); },
-  getStage() { return this.load(this.stage, 1); },
-
-  getPoints() { return getProfile().points; },
-  addPoints(amount, desc) {
-    addPoints(amount, desc);
-    const hist = this.getPointsHistory();
-    hist.push({ type: amount > 0 ? 'earn' : 'spend', amount: Math.abs(amount), date: this.today(), desc });
-    this.save(this.pointsHistory, hist);
-  },
-  getRewards() { return getRewards().list; },
-  saveRewards(list) { const r = getRewards(); r.list = list; saveRewards(r); },
-  getExchanges() { return getRewards().exchanges; },
-  saveExchanges(list) { const r = getRewards(); r.exchanges = list; saveRewards(r); },
-  getStreak() { const p = getProfile(); return { count: p.streak || 0, lastDate: p.lastLearnDate || '' }; },
-  saveStreak(s) { const p = getProfile(); p.streak = s.count; p.lastLearnDate = s.lastDate; saveProfile(p); },
-  getPin() { return getPin(); },
-  savePin(pin) { setPin(pin); },
-
-  getVoiceEnabled() { const s = getSettings(); return s.voiceEnabled !== false; },
-  saveVoiceEnabled(v) { const s = getSettings(); s.voiceEnabled = v; saveSettings(s); },
-  getRate() { const s = getSettings(); return s.speechRate; },
-  saveRate(v) { const s = getSettings(); s.speechRate = v; saveSettings(s); }
-};
-
 function today() { return ChineseStore.today(); }
 function yesterday() { return ChineseStore.yesterday(); }
 function uid() { return ChineseStore.uid(); }
