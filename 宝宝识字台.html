@@ -38,74 +38,30 @@
 
     /* ========== 顶部栏 ========== */
     .topbar {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #fff;
+      padding: 16px 20px 14px;
       position: sticky;
       top: 0;
       z-index: 100;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-      color: #fff;
-      padding: 12px 16px;
-      padding-top: max(12px, env(safe-area-inset-top));
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 2px 12px rgba(255, 140, 66, 0.25);
+      box-shadow: 0 2px 12px rgba(230, 115, 28, 0.3);
     }
-    .back-link {
-      color: #fff;
-      text-decoration: none;
-      font-size: 0.95rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 6px 10px;
-      border-radius: 20px;
-      background: rgba(255,255,255,0.2);
-    }
-    .title { font-size: 1.25rem; font-weight: 800; letter-spacing: 1px; }
-    .points {
-      background: rgba(255,255,255,0.25);
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-weight: 700;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .points::before { content: '⭐'; }
+    .topbar-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .topbar-title { font-size: 1.4rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .topbar-title a { color: #fff; text-decoration: none; }
+    .topbar-actions { display: flex; gap: 10px; align-items: center; font-size: 0.9rem; }
+    .topbar-actions .points { background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 50px; font-weight: 700; }
 
     /* ========== 模式标签 ========== */
-    .mode-tabs {
-      display: flex;
-      gap: 8px;
-      padding: 14px 16px 6px;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
-    .mode-tabs::-webkit-scrollbar { display: none; }
+    .mode-tabs { display: flex; background: rgba(255,255,255,0.25); border-radius: 50px; padding: 3px; margin-top: 12px; }
     .mode-tab {
-      flex: 1;
-      min-width: 76px;
-      text-align: center;
-      padding: 10px 8px;
-      border-radius: var(--radius-sm);
-      background: #fff;
-      color: var(--text-light);
-      font-weight: 700;
-      font-size: 0.9rem;
-      box-shadow: var(--shadow);
-      cursor: pointer;
-      transition: all 0.2s;
+      flex: 1; text-align: center; padding: 8px 0; font-size: 0.8rem; font-weight: 700;
+      color: rgba(255,255,255,0.85); border-radius: 50px; cursor: pointer; transition: all 0.3s;
+      border: none; background: transparent; min-height: 44px;
+      display: flex; align-items: center; justify-content: center; gap: 4px;
       white-space: nowrap;
     }
-    .mode-tab.active {
-      background: var(--primary);
-      color: #fff;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(255, 140, 66, 0.25);
-    }
+    .mode-tab.active { background: #fff; color: #E6731C; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
     /* ========== 主容器 ========== */
     .container { padding: 14px 16px; max-width: 720px; margin: 0 auto; }
@@ -639,16 +595,21 @@
 </head>
 <body>
   <div class="topbar">
-    <a href="./index.html" class="back-link">← 首页</a>
-    <div class="title">宝宝识字台</div>
-    <div class="points" id="headerPoints">0</div>
-  </div>
-
-  <div class="mode-tabs">
-    <div class="mode-tab active" data-mode="today" onclick="switchMode('today')">今日识字</div>
-    <div class="mode-tab" data-mode="practice" onclick="switchMode('practice')">趣味练习</div>
-    <div class="mode-tab" data-mode="map" onclick="switchMode('map')">闯关地图</div>
-    <div class="mode-tab" data-mode="shop" onclick="switchMode('shop')">积分商城</div>
+    <div class="topbar-row">
+      <div class="topbar-title">
+        <a href="./index.html">←</a>
+        <span>📖 宝宝识字台</span>
+      </div>
+      <div class="topbar-actions">
+        <span class="points">💎 <span data-points>0</span></span>
+      </div>
+    </div>
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tab-today" onclick="switchMode('today')">📚 今日识字</button>
+      <button class="mode-tab" id="tab-practice" onclick="switchMode('practice')">🎮 趣味练习</button>
+      <button class="mode-tab" id="tab-map" onclick="switchMode('map')">🗺️ 闯关地图</button>
+      <button class="mode-tab" id="tab-shop" onclick="switchMode('shop')">🎁 积分商城</button>
+    </div>
   </div>
 
   <div class="container">
@@ -959,13 +920,16 @@ function ensureDefaultRewards() {
 // ============================================================
 function switchMode(mode) {
   currentMode = mode;
-  document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  const tab = document.getElementById('tab-' + mode);
+  if (tab) tab.classList.add('active');
   renderGame();
 }
 
 function updateHeader() {
-  const el = document.getElementById('headerPoints');
-  if (el) el.textContent = ChineseStore.getPoints();
+  document.querySelectorAll('[data-points]').forEach(el => {
+    el.textContent = ChineseStore.getPoints();
+  });
 }
 
 function renderGame() {
