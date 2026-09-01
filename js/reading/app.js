@@ -52,6 +52,7 @@ function switchReadingMode(mode) {
   readingMode = mode;
   _currentBookId = null;
   stopReadingSpeech();
+  ScenePainter.stop();
 
   document.querySelectorAll('.mode-tab').forEach(tab => {
     tab.classList.toggle('active', tab.dataset.mode === mode);
@@ -96,6 +97,7 @@ function openReadingBook(id) {
 function backToShelf() {
   stopReadingSpeech();
   ReadingPlayer.stopAll();
+  ScenePainter.stop();
   _currentBookId = null;
   renderShelf();
 }
@@ -158,7 +160,8 @@ function updateReaderView(index, total) {
   if (!stage || !text) return;
 
   stage.style.background = item.bg || 'linear-gradient(135deg, #FFFDF7 0%, #FFF3E0 100%)';
-  stage.innerHTML = `<div class="reader-scene">${item.scene || '📖'}</div>`;
+  // 用 Canvas 绘制场景插画（原为纯 emoji 文本）
+  ScenePainter.mount(stage, item.scene || '📖', item.bg);
   text.innerHTML = `
     <div class="reader-main">${item.main}</div>
     ${item.sub ? `<div class="reader-sub">${item.sub}</div>` : ''}

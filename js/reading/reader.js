@@ -29,14 +29,22 @@ function stopReadingSpeech() {
     _speechResolve = null;
     done();
   }
-  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  if (typeof Speech !== 'undefined') Speech.stop();
+  else if (window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+// 语音不可用时，按估算时长等待，保证自动播放不会卡住
+function sleepEstimate(text, lang) {
+  return sleepMs(estimateSpeakSeconds(text, lang) * 1000);
 }
 
 // 朗读一段文本，返回可 await 的 Promise
 function speakReading(text, lang) {
   const settings = typeof getSettings === 'function' ? getSettings() : {};
-  if (!window.speechSynthesis || settings.voiceEnabled === false) {
-    return sleepMs(estimateSpeakSeconds(text, lang) * 1000);
+  const useSpeech = typeof Speech !== 'undefined' && Speech.supported;
+
+  if (settings.voiceEnabled === false || !useSpeech) {
+    return sleepEstimate(text, lang);
   }
 
   if (_speechResolve) {
@@ -44,22 +52,30 @@ function speakReading(text, lang) {
     _speechResolve = null;
     done();
   }
-  window.speechSynthesis.cancel();
+  Speech.stop();
 
   return new Promise(resolve => {
+    _speechResolve = resolve;
     const finish = () => {
       if (_speechResolve === resolve) {
         _speechResolve = null;
         resolve();
       }
     };
-    _speechResolve = resolve;
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang || 'zh-CN';
-    u.rate = settings.speechRate || 0.85;
-    u.onend = finish;
-    u.onerror = finish;
-    window.speechSynthesis.speak(u);
+
+    Speech.speak(text, {
+      lang: lang || 'zh-CN',
+      rate: settings.speechRate || 0.85,
+    }).then(ok => {
+      if (!ok) {
+        Speech.showHelp(Speech.lastError);
+        // 自动播放时若持续无声，停止空转
+        if (ReadingPlayer.auto) ReadingPlayer.stopAuto();
+        finish();
+        return sleepEstimate(text, lang).then(finish);
+      }
+      finish();
+    }).catch(() => finish());
   });
 }
 
@@ -169,7 +185,8 @@ const ReadingPlayer = {
       _speechResolve = null;
       done();
     }
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (typeof Speech !== 'undefined') Speech.stop();
+    else if (window.speechSynthesis) window.speechSynthesis.cancel();
     this.notify();
   },
 

@@ -166,10 +166,20 @@ function pickOptions(correct, pool, count = 4) {
 
 // ---------------------- 语音 ----------------------
 function speakText(text, lang = 'zh-CN', rate = 0.85) {
-  if (!window.speechSynthesis) return;
   const settings = getSettings();
   if (settings.voiceEnabled === false) return;
 
+  // 统一走 Speech 引擎（处理安卓/华为的解锁、语音列表、静默失败等问题）
+  if (typeof Speech !== 'undefined' && Speech.supported) {
+    Speech.speak(text, {
+      lang,
+      rate: settings.speechRate || rate,
+      onfail: reason => Speech.showHelp(reason),
+    });
+    return;
+  }
+
+  if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = lang;
@@ -336,7 +346,8 @@ function startStudyTimer() {
 function getStudyTimeSummary(days = 7) {
   const data = getStudyTime();
   const result = [];
-  for (let i = days - 1; i >= 0; i--) {
+  // 倒序返回：最新日期在最前，方便家长端直接展示
+  for (let i = 0; i < days; i++) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const date = formatDate(d);

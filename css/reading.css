@@ -138,13 +138,21 @@
 
 .reader-stage {
   border-radius: 20px;
-  min-height: 180px;
+  min-height: 200px;
+  height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  padding: 24px;
+  overflow: hidden;
+  position: relative;
   transition: background 0.3s;
+}
+.reader-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
 }
 .reader-scene {
   font-size: 4.2rem;
@@ -329,7 +337,8 @@
     font-size: 3.2rem;
   }
   .reader-stage {
-    min-height: 150px;
+    min-height: 170px;
+    height: 190px;
   }
   .reader-main {
     font-size: 1.05rem;
