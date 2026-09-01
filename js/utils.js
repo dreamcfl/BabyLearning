@@ -586,7 +586,14 @@ const ChineseStore = {
 
   getDailyCount() { return this.load(this.daily, 5); },
   getCharCursor() { return this.load(this.charCursor, 0); },
-  getDailyLog() { return this.load(this.dailyLog, {}); },
+  getDailyLog() {
+    const raw = this.load(this.dailyLog, {});
+    const log = {};
+    Object.keys(raw).forEach(k => {
+      log[k] = Array.isArray(raw[k]) ? raw[k] : [];
+    });
+    return log;
+  },
   getPointsHistory() { return this.load(this.pointsHistory, []); },
   getStage() { return this.load(this.stage, 1); },
 

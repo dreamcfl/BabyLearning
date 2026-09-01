@@ -359,6 +359,24 @@
     .mback { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); }
 
     /* ========== 闯关地图 ========== */
+    .level-back-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 50px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(255, 140, 66, 0.25);
+      transition: transform 0.15s, box-shadow 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .level-back-btn:active { transform: scale(0.96); box-shadow: 0 2px 8px rgba(255, 140, 66, 0.2); }
+    .level-back-btn::before { content: "←"; font-size: 1rem; }
     .level-map {
       display: flex;
       flex-wrap: wrap;
@@ -534,15 +552,86 @@
     .detail-close {
       width: 100%;
       border: none;
+      background: linear-gradient(135deg, var(--green) 0%, #3AAFA6 100%);
+      color: #fff;
+      padding: 16px;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin-top: 24px;
+      cursor: pointer;
+      min-height: 56px;
+      box-shadow: 0 6px 16px rgba(107, 203, 119, 0.35);
+      transition: transform 0.15s, box-shadow 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .detail-close:active { transform: scale(0.97); box-shadow: 0 3px 10px rgba(107, 203, 119, 0.3); }
+    .detail-close::before { content: "✨"; font-size: 1.2rem; }
+
+    /* ========== 通用弹窗（覆盖 common.css 补充样式） ========== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 400;
+      padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      padding: 28px 22px 24px;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+      animation: modalIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    }
+    .modal-box h3 {
+      font-size: 1.35rem;
+      color: var(--text);
+      margin-bottom: 10px;
+      font-weight: 800;
+    }
+    .modal-box p {
+      color: var(--text-light);
+      margin-bottom: 22px;
+      font-size: 1rem;
+      line-height: 1.55;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .modal-btn {
+      flex: 1;
+      min-width: 110px;
+      border: none;
       background: var(--green);
       color: #fff;
-      padding: 14px;
-      border-radius: var(--radius);
+      padding: 14px 20px;
+      border-radius: 50px;
       font-size: 1.05rem;
       font-weight: 800;
-      margin-top: 20px;
       cursor: pointer;
+      min-height: 52px;
+      box-shadow: 0 4px 12px rgba(107, 203, 119, 0.35);
+      transition: transform 0.15s, box-shadow 0.15s;
     }
+    .modal-btn:active { transform: scale(0.96); }
+    .modal-btn.primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      box-shadow: 0 4px 12px rgba(255, 140, 66, 0.35);
+    }
+    .modal-btn.secondary { background: #F0F0F0; color: var(--text); box-shadow: none; }
 
     /* ========== 庆祝弹窗内容 ========== */
     .celebrate-box { text-align: center; padding: 10px; }
@@ -647,20 +736,42 @@ function speakEnglish(text) {
 // ============================================================
 // 笔顺
 // ============================================================
+let currentWriter = null;
+
 function renderStroke(charId, char) {
   const box = document.getElementById('strokeBox');
   if (!box) return;
+  currentWriter = null;
+  box.style.display = 'flex';
+  box.style.alignItems = 'center';
+  box.style.justifyContent = 'center';
+  box.style.gap = '0';
   box.innerHTML = '<div class="stroke-fallback">' + char + '</div>';
   if (window.HanziWriter) {
     try {
       box.innerHTML = '';
-      HanziWriter.create(box, char, {
+      currentWriter = HanziWriter.create(box, char, {
         width: 240, height: 240, padding: 5,
         strokeColor: '#FF8C42', radicalColor: '#4ECDC4',
         strokeAnimationSpeed: 1, delayBetweenStrokes: 300,
         showCharacter: false, showOutline: true
-      }).animateCharacter();
+      });
+      currentWriter.animateCharacter();
     } catch (e) { box.innerHTML = '<div class="stroke-fallback">' + char + '</div>'; }
+  }
+}
+
+function animateStroke() {
+  if (currentWriter && currentWriter.animateCharacter) {
+    currentWriter.animateCharacter();
+  }
+}
+
+function startQuiz() {
+  if (currentWriter && currentWriter.quiz) {
+    currentWriter.quiz();
+  } else {
+    showModal('提示', '笔顺数据还没准备好，请稍后再试~', [{ text: '确定', action: closeModal }]);
   }
 }
 
@@ -686,24 +797,45 @@ function getTodayChars() {
   const daily = getDailyCount();
   const log = getDailyLog();
   const learnedToday = log[today()] || [];
-  if (learnedToday.length >= daily) return learnedToday.slice(0, daily).map(id => CHAR_DB.find(c => c.id === id)).filter(Boolean);
-  // 优先从当前阶段取未学过的
-  let pool = [];
+
+  // 如果已经完成今日任务，直接显示已学字
+  if (learnedToday.length >= daily) {
+    return learnedToday.slice(0, daily).map(id => CHAR_DB.find(c => c.id === id)).filter(Boolean);
+  }
+
+  // 优先显示今天已学的字，确保能继续看到学习进度和对号
+  let pool = learnedToday.map(id => CHAR_DB.find(c => c.id === id)).filter(Boolean);
+
+  // 从当前阶段取未学过的补充到每日目标
   const current = getStage();
   const stageChars = getStageChars(current);
   const progress = load(ChineseStore.progress, {});
   const unlearnedStage = stageChars.filter(c => !progress[c.id]);
-  pool = unlearnedStage.length ? unlearnedStage : stageChars;
-  // 如果不够，从下一阶段补
+  const extraPool = unlearnedStage.length ? unlearnedStage : stageChars;
+  for (const c of extraPool) {
+    if (pool.length >= daily) break;
+    if (!pool.find(x => x.id === c.id)) pool.push(c);
+  }
+
+  // 如果还不够，从下一阶段补
   if (pool.length < daily) {
     const next = getStageChars(current + 1);
-    pool = pool.concat(next);
+    for (const c of next) {
+      if (pool.length >= daily) break;
+      if (!pool.find(x => x.id === c.id)) pool.push(c);
+    }
   }
+
   // 仍不够则全库随机
   if (pool.length < daily) {
-    pool = pool.concat(shuffle(CHAR_DB).filter(c => !pool.includes(c)));
+    const all = shuffle(CHAR_DB);
+    for (const c of all) {
+      if (pool.length >= daily) break;
+      if (!pool.find(x => x.id === c.id)) pool.push(c);
+    }
   }
-  return shuffle(pool).slice(0, daily);
+
+  return pool;
 }
 
 function recordLearn(charId) {
@@ -764,7 +896,11 @@ function renderGame() {
   if (!area) return;
   if (currentMode === 'today') renderToday(area);
   else if (currentMode === 'practice') renderPractice(area);
-  else if (currentMode === 'map') renderLevelMap(area);
+  else if (currentMode === 'map') {
+    // 修复：闯关地图进入关卡后，保持在关卡详情界面，不要回到大地图
+    if (levelView) renderLevel(area);
+    else renderLevelMap(area);
+  }
   else if (currentMode === 'wall') renderWall(area);
 }
 
@@ -1007,6 +1143,8 @@ function renderLevelMap(area) {
   area.innerHTML = html;
 }
 
+let levelView = null;
+
 function startLevel(level) {
   const levelSize = 5;
   const start = (level - 1) * levelSize;
@@ -1014,15 +1152,21 @@ function startLevel(level) {
   if (!chars.length) return;
   currentStage = level;
   save(ChineseStore.stage, level);
-  // 切换到今日识字并显示该关卡字
-  currentMode = 'today';
-  document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === 'today'));
-  // 覆盖今日目标为该关卡
-  const area = document.getElementById('gameArea');
-  let html = '<div class="section-title">第 ' + level + ' 关</div>';
+  levelView = { level, chars };
+  renderGame();
+}
+
+function renderLevel(area) {
+  if (!levelView) return renderLevelMap(area);
+  const level = levelView.level;
+  const chars = levelView.chars;
+  const learnedIds = Object.keys(load(ChineseStore.progress, {}));
+  let html = '<div class="section-title"><span>第 ' + level + ' 关</span><button class="level-back-btn" onclick="levelView=null;renderGame()">返回地图</button></div>';
   html += '<div class="char-grid">';
   chars.forEach(c => {
-    html += '<div class="char-card" onclick="openCharDetail(\'' + c.id + '\')">' +
+    const learned = learnedIds.includes(c.id);
+    html += '<div class="char-card ' + (learned ? 'learned' : '') + '" onclick="openCharDetail(\'' + c.id + '\')">' +
+      '<div class="learned-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l6 6 10-14"/></svg></div>' +
       '<div class="ch-emoji">' + c.emoji + '</div>' +
       '<div class="ch-big">' + c.char + '</div>' +
       '<div class="ch-pinyin">' + c.pinyin + '</div>' +
@@ -1070,10 +1214,12 @@ function renderWall(area) {
 // ============================================================
 // 字详情弹窗
 // ============================================================
+let detailCharId = null;
+
 function openCharDetail(charId) {
   const c = CHAR_DB.find(x => x.id === charId);
   if (!c) return;
-  recordLearn(charId);
+  detailCharId = charId;
 
   const box = document.getElementById('detailBox');
   let html = '<div class="detail-head">' +
@@ -1085,13 +1231,13 @@ function openCharDetail(charId) {
 
   html += '<div class="stroke-wrap"><div class="detail-section-title">笔画笔顺</div><div id="strokeBox"></div>' +
     '<div class="stroke-actions"><button class="btn-stroke" onclick="renderStroke(\'' + c.id + '\',\'' + c.char + '\')">再写一遍</button>' +
-    '<button class="btn-stroke ghost" onclick="speak(\'' + c.word + '\')">读词语</button></div></div>';
+    '<button class="btn-stroke ghost" onclick="startQuiz()">跟写</button></div></div>';
 
   html += '<div class="detail-section-title">例词</div><div class="word-chips">' +
-    '<div class="word-chip" onclick="speak(\'' + c.word + '\')">' + c.word + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/></svg></div>' +
+    '<div class="word-chip" onclick="speak(\'' + c.word + '\')">' + c.word + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></div>' +
     '</div>';
 
-  html += '<button class="detail-close" onclick="closeDetail()">学会了 ✓</button>';
+  html += '<button class="detail-close" id="btnLearned" onclick="markLearned()">学会了</button>';
   box.innerHTML = html;
   document.getElementById('detailOverlay').classList.add('show');
   setTimeout(() => renderStroke(c.id, c.char), 100);
@@ -1099,7 +1245,28 @@ function openCharDetail(charId) {
 }
 
 function closeDetail() {
+  // 仅关闭详情弹窗（如点击遮罩），不记录学习进度
+  detailCharId = null;
   document.getElementById('detailOverlay').classList.remove('show');
+}
+
+function markLearned() {
+  // 用户点击“学会了”才记录学习，并给出积分提示
+  const charId = detailCharId;
+  if (!charId) return;
+  detailCharId = null;
+  document.getElementById('detailOverlay').classList.remove('show');
+
+  const progress = load(ChineseStore.progress, {});
+  const isNew = !progress[charId];
+  recordLearn(charId);
+  if (isNew) {
+    ChineseStore.addPoints(2, '识字：' + (CHAR_DB.find(c => c.id === charId) || {}).char);
+    showModal('🎉 真棒！', '你学会了一个新字，获得 2 积分！', [{ text: '继续', action: closeModal }]);
+  } else {
+    showModal('👍 已学会', '这个字你已经学会啦，再去看看别的字吧～', [{ text: '继续', action: closeModal }]);
+  }
+  // 积分弹窗打开时同步刷新底层界面，确保关闭后已学状态已更新
   renderGame();
 }
 
