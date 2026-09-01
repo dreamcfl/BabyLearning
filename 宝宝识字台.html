@@ -320,9 +320,9 @@
     .memory-stat { font-size: 0.95rem; color: var(--text-light); margin-bottom: 12px; }
     .memory-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 10px;
-      max-width: 360px;
+      max-width: 420px;
       margin: 0 auto 16px;
     }
     .mcard {
@@ -1084,8 +1084,8 @@ function pickOption(selectedId, correctId, type) {
 function renderMemoryGameHTML() {
   const learned = Object.keys(load(ChineseStore.progress, {}));
   let pool = learned.map(id => CHAR_DB.find(c => c.id === id)).filter(Boolean);
-  if (pool.length < 4) pool = shuffle(CHAR_DB).slice(0, 6);
-  pool = shuffle(pool).slice(0, 6);
+  if (pool.length < 5) pool = shuffle(CHAR_DB).slice(0, 5);
+  pool = shuffle(pool).slice(0, 5);
   const pairs = shuffle(pool.flatMap(c => [
     { id: c.id, type: 'char', val: c.char, meta: c },
     { id: c.id, type: 'emoji', val: c.emoji, meta: c }
