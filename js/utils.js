@@ -202,6 +202,162 @@ function closeModal() {
   if (overlay) overlay.classList.remove('show');
 }
 
+// ---------------------- 学习时长统计 ----------------------
+const STUDY_TIME_KEY = 'studyTime';
+const REMINDER_INTERVAL_MINUTES = 60;
+const FIRST_REMINDER_MINUTES = 30;
+const STUDY_TICK_MS = 1000;
+
+function getStudyTime() {
+  return storageGet(STUDY_TIME_KEY, {
+    daily: {}, // { '2026-09-01': 秒数 }
+    todayDate: formatDate(new Date()),
+    currentSession: 0,
+    lastTick: Date.now(),
+    remindedMinutes: [],
+  });
+}
+
+function saveStudyTime(data) {
+  storageSet(STUDY_TIME_KEY, data);
+}
+
+function getTodayStudySeconds() {
+  const data = getStudyTime();
+  const today = formatDate(new Date());
+  const history = data.daily && data.daily[today] ? data.daily[today] : 0;
+  return history + data.currentSession;
+}
+
+function formatStudyDuration(totalSeconds) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const parts = [];
+  if (hours > 0) parts.push(`${hours}小时`);
+  if (minutes > 0) parts.push(`${minutes}分`);
+  if (seconds > 0 || parts.length === 0) parts.push(`${seconds}秒`);
+  return parts.join('');
+}
+
+function updateStudyTimeDisplay() {
+  const seconds = getTodayStudySeconds();
+  const text = formatStudyDuration(seconds);
+  document.querySelectorAll('[data-study-time]').forEach(el => {
+    el.textContent = text;
+  });
+}
+
+function recordStudyTick() {
+  const now = Date.now();
+  const data = getStudyTime();
+  const today = formatDate(new Date());
+
+  // 跨天重置
+  if (data.todayDate !== today) {
+    data.todayDate = today;
+    data.currentSession = 0;
+    data.remindedMinutes = [];
+  }
+
+  // 防止标签页休眠后一次性跳太多：单次最多记 5 秒
+  const elapsed = data.lastTick ? Math.min(5, Math.round((now - data.lastTick) / 1000)) : 1;
+  data.currentSession += Math.max(0, elapsed);
+  data.lastTick = now;
+  saveStudyTime(data);
+
+  updateStudyTimeDisplay();
+  checkRestReminder();
+}
+
+function checkRestReminder() {
+  const totalMinutes = Math.floor(getTodayStudySeconds() / 60);
+  const data = getStudyTime();
+  const reminded = new Set(data.remindedMinutes || []);
+
+  let shouldRemind = false;
+  if (totalMinutes >= FIRST_REMINDER_MINUTES && !reminded.has(FIRST_REMINDER_MINUTES)) {
+    shouldRemind = true;
+    reminded.add(FIRST_REMINDER_MINUTES);
+  }
+
+  // 1 小时及以后每隔 1 小时提醒
+  if (totalMinutes >= 60) {
+    const reminderPoint = Math.floor(totalMinutes / REMINDER_INTERVAL_MINUTES) * REMINDER_INTERVAL_MINUTES;
+    if (reminderPoint >= REMINDER_INTERVAL_MINUTES && !reminded.has(reminderPoint)) {
+      shouldRemind = true;
+      reminded.add(reminderPoint);
+    }
+  }
+
+  if (shouldRemind) {
+    data.remindedMinutes = Array.from(reminded);
+    saveStudyTime(data);
+    showRestReminder(totalMinutes);
+  }
+}
+
+function showRestReminder(totalMinutes) {
+  let overlay = document.getElementById('restReminderOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'restReminderOverlay';
+    overlay.className = 'rest-reminder-overlay';
+    overlay.innerHTML = `
+      <div class="rest-reminder-box">
+        <div class="rest-reminder-icon">🌿</div>
+        <h3>该休息一会儿啦</h3>
+        <p class="rest-reminder-text"></p>
+        <button class="rest-reminder-btn" onclick="closeRestReminder()">我知道了</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  }
+
+  const text = overlay.querySelector('.rest-reminder-text');
+  text.textContent = `今天已经学习了 ${formatStudyDuration(totalMinutes * 60)}，让眼睛和身体都休息一下吧～`;
+  overlay.classList.add('show');
+}
+
+function closeRestReminder() {
+  const overlay = document.getElementById('restReminderOverlay');
+  if (overlay) overlay.classList.remove('show');
+}
+
+let _studyTimerStarted = false;
+function startStudyTimer() {
+  if (_studyTimerStarted) return;
+  _studyTimerStarted = true;
+  // 立即执行一次，确保打开页面就能看到时长
+  recordStudyTick();
+  setInterval(recordStudyTick, STUDY_TICK_MS);
+}
+
+function getStudyTimeSummary(days = 7) {
+  const data = getStudyTime();
+  const result = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const date = formatDate(d);
+    const seconds = data.daily && data.daily[date] ? data.daily[date] : 0;
+    result.push({ date, seconds, current: date === formatDate(new Date()) });
+  }
+  return result;
+}
+
+function stopAndPersistSession() {
+  const data = getStudyTime();
+  const today = formatDate(new Date());
+  if (data.currentSession > 0) {
+    data.daily = data.daily || {};
+    data.daily[today] = (data.daily[today] || 0) + data.currentSession;
+    data.currentSession = 0;
+    data.lastTick = Date.now();
+    saveStudyTime(data);
+  }
+}
+
 // ---------------------- UI 更新 ----------------------
 function updatePointsUI() {
   document.querySelectorAll('[data-points]').forEach(el => {
@@ -218,7 +374,111 @@ function updateStreakUI() {
 function initCommonUI() {
   updatePointsUI();
   updateStreakUI();
+  updateStudyTimeDisplay();
+  injectStudyTimeStyles();
+  startStudyTimer();
 }
+
+function injectStudyTimeStyles() {
+  if (document.getElementById('studyTimeStyles')) return;
+  const style = document.createElement('style');
+  style.id = 'studyTimeStyles';
+  style.textContent = `
+    .study-time-pill {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .study-time-floating {
+      position: fixed;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      right: 16px;
+      background: rgba(0,0,0,0.65);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      z-index: 300;
+      backdrop-filter: blur(4px);
+    }
+    .rest-reminder-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      padding: 20px;
+    }
+    .rest-reminder-overlay.show { display: flex; }
+    .rest-reminder-box {
+      background: #fff;
+      border-radius: 24px;
+      padding: 28px 24px;
+      max-width: 360px;
+      width: 100%;
+      text-align: center;
+      animation: restReminderIn 0.3s ease;
+    }
+    .rest-reminder-icon { font-size: 3rem; margin-bottom: 8px; }
+    .rest-reminder-box h3 { font-size: 1.3rem; color: #4A4A4A; margin-bottom: 8px; }
+    .rest-reminder-text { color: #888; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px; }
+    .rest-reminder-btn {
+      background: linear-gradient(135deg, #6BCB77 0%, #4ECDC4 100%);
+      color: #fff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 48px;
+    }
+    @keyframes restReminderIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function injectStudyTimeIndicator() {
+  const actions = document.querySelector('.topbar-actions');
+  if (actions && !actions.querySelector('[data-study-time]')) {
+    const pill = document.createElement('span');
+    pill.className = 'study-time-pill';
+    pill.innerHTML = '⏱️ <span data-study-time>0秒</span>';
+    actions.appendChild(pill);
+    updateStudyTimeDisplay();
+  }
+}
+
+// 页面加载完成后统一初始化
+document.addEventListener('DOMContentLoaded', () => {
+  injectStudyTimeIndicator();
+  initCommonUI();
+});
+
+// 页面隐藏/关闭时把当前会话固化到当日累计
+window.addEventListener('beforeunload', stopAndPersistSession);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    stopAndPersistSession();
+  } else {
+    const data = getStudyTime();
+    data.lastTick = Date.now();
+    saveStudyTime(data);
+  }
+});
 
 // ---------------------- 导出/导入/清空 ----------------------
 function exportAllData() {

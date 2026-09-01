@@ -75,11 +75,60 @@
     .subject-card .subject-icon { font-size: 2.8rem; line-height: 1; margin-bottom: 10px; }
     .subject-card h2 { font-size: 1.05rem; color: #E6731C; margin-bottom: 6px; }
     .subject-card p { font-size: 0.74rem; color: #888; line-height: 1.4; }
+    .subject-card.reading {
+      background: linear-gradient(135deg, #FAF5FF 0%, #F5E8FF 100%);
+      border-color: #D7BDE2;
+    }
+    .subject-card.reading::before { background: linear-gradient(90deg, #9B59B6, #C39BD3); }
+    .subject-card.reading h2 { color: #8E44AD; }
     .subject-card.parent {
       background: linear-gradient(135deg, #FFF5FA 0%, #FFE8F0 100%);
       border-color: #FF9FB2;
     }
+    .subject-card.parent::before { background: linear-gradient(90deg, #FF9FB2, #D45D79); }
     .subject-card.parent h2 { color: #D45D79; }
+    .shop-bar {
+      display: block;
+      background: linear-gradient(135deg, #FFFBE6 0%, #FFF4CC 100%);
+      border: 2px solid #FFD93D;
+      border-radius: 20px;
+      padding: 16px 20px;
+      text-align: center;
+      text-decoration: none;
+      color: #4A4A4A;
+      box-shadow:
+        0 14px 32px rgba(0, 0, 0, 0.1),
+        0 6px 14px rgba(0, 0, 0, 0.05);
+      transition: transform 0.15s, box-shadow 0.15s;
+      margin-bottom: 16px;
+    }
+    .shop-bar:active { transform: scale(0.98); box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08); }
+    .shop-bar .shop-bar-row { display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .shop-bar .shop-bar-icon { font-size: 1.8rem; }
+    .shop-bar .shop-bar-text { text-align: left; }
+    .shop-bar h2 { font-size: 1rem; color: #E6A817; margin-bottom: 2px; }
+    .shop-bar p { font-size: 0.72rem; color: #888; }
+    .parent-bar {
+      display: block;
+      background: linear-gradient(135deg, #FFF5FA 0%, #FFE8F0 100%);
+      border: 2px solid #FF9FB2;
+      border-radius: 20px;
+      padding: 16px 20px;
+      text-align: center;
+      text-decoration: none;
+      color: #4A4A4A;
+      box-shadow:
+        0 14px 32px rgba(0, 0, 0, 0.1),
+        0 6px 14px rgba(0, 0, 0, 0.05);
+      transition: transform 0.15s, box-shadow 0.15s;
+      margin-bottom: 24px;
+    }
+    .parent-bar:active { transform: scale(0.98); box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08); }
+    .parent-bar .parent-row { display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .parent-bar .parent-icon { font-size: 1.8rem; }
+    .parent-bar .parent-text { text-align: left; }
+    .parent-bar h2 { font-size: 1rem; color: #D45D79; margin-bottom: 2px; }
+    .parent-bar p { font-size: 0.72rem; color: #888; }
     .summary {
       display: flex; justify-content: center; gap: 24px;
       margin-bottom: 22px; font-size: 0.9rem; color: #666;
@@ -127,12 +176,32 @@
         <h2>宝宝数学台</h2>
         <p>数字认知 · 比大小 · 加减法</p>
       </a>
-      <a class="subject-card parent" href="./家长端.html">
-        <div class="subject-icon">🔒</div>
-        <h2>家长端</h2>
-        <p>三科统计 · 奖励管理 · 数据备份</p>
+      <a class="subject-card" href="./宝宝阅读角.html">
+        <div class="subject-icon">📚</div>
+        <h2>宝宝阅读角</h2>
+        <p>绘本故事 · 诗词童谣 · 英语绘本</p>
       </a>
     </div>
+
+    <a class="shop-bar" href="./积分商城.html">
+      <div class="shop-bar-row">
+        <div class="shop-bar-icon">🎁</div>
+        <div class="shop-bar-text">
+          <h2>积分商城</h2>
+          <p>兑换奖励 · 学习赚积分 · 家长确认</p>
+        </div>
+      </div>
+    </a>
+
+    <a class="parent-bar" href="./家长端.html">
+      <div class="parent-row">
+        <div class="parent-icon">🔒</div>
+        <div class="parent-text">
+          <h2>家长端</h2>
+          <p>三科统计 · 奖励管理 · 数据备份</p>
+        </div>
+      </div>
+    </a>
 
     <div class="tip">
       💡 首次打开建议用 <strong>Chrome / Safari</strong><br>

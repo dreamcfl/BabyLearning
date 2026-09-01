@@ -380,60 +380,35 @@
     .level-dot.done { background: var(--green); color: #fff; }
     .level-dot.current { background: var(--primary); color: #fff; box-shadow: 0 0 0 4px rgba(255, 140, 66, 0.2); }
 
-    /* ========== 积分商城 ========== */
-    .shop-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-    .shop-item {
-      background: #FFF8F0;
-      border: 2px solid #FFE8D6;
+    /* ========== 字卡墙 ========== */
+    .wall-tip {
+      background: #fff;
       border-radius: var(--radius);
-      padding: 14px 10px;
-      text-align: center;
-      position: relative;
-    }
-    .shop-icon { width: 44px; height: 44px; margin: 0 auto 8px; }
-    .shop-icon svg { width: 100%; height: 100%; }
-    .shop-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
-    .shop-cost { font-size: 0.85rem; color: var(--primary); font-weight: 800; margin-bottom: 10px; }
-    .shop-cost .coin { font-size: 0.7rem; color: var(--text-light); font-weight: 500; }
-    .btn-redeem {
-      width: 100%;
-      border: none;
-      border-radius: 18px;
-      padding: 8px 0;
-      font-weight: 700;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      color: var(--text-light);
       font-size: 0.85rem;
-      background: var(--primary);
-      color: #fff;
-      cursor: pointer;
+      text-align: center;
+      box-shadow: var(--shadow);
     }
-    .btn-redeem:disabled { background: #DDD; color: #999; cursor: not-allowed; }
-    .pending-badge {
-      position: absolute;
-      top: 6px; right: 6px;
-      background: var(--yellow);
-      color: var(--text);
-      font-size: 0.6rem;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 6px;
-    }
-    .exchange-list { margin-top: 20px; }
-    .exchange-item {
+    .wall-section { margin-bottom: 20px; }
+    .wall-section-title {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 0;
-      border-bottom: 1px solid #F0F0F0;
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 10px;
+      padding: 0 4px;
     }
-    .exchange-item .ex-name { font-weight: 600; font-size: 0.9rem; }
-    .exchange-item .ex-date { font-size: 0.75rem; color: var(--text-light); margin-top: 2px; }
-    .exchange-item .ex-status { font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 8px; }
-    .exchange-item .ex-status.pending { background: var(--yellow); color: var(--text); }
-    .exchange-item .ex-status.confirmed { background: var(--green-light); color: var(--green); }
+    .wall-section-title span {
+      font-size: 0.75rem;
+      background: #FFF3E0;
+      color: var(--primary-dark);
+      padding: 2px 10px;
+      border-radius: 50px;
+    }
 
     /* ========== 字详情弹窗 ========== */
     .detail-overlay {
@@ -609,7 +584,7 @@
       <button class="mode-tab active" id="tab-today" onclick="switchMode('today')">📚 今日识字</button>
       <button class="mode-tab" id="tab-practice" onclick="switchMode('practice')">🎮 趣味练习</button>
       <button class="mode-tab" id="tab-map" onclick="switchMode('map')">🗺️ 闯关地图</button>
-      <button class="mode-tab" id="tab-shop" onclick="switchMode('shop')">🎁 积分商城</button>
+      <button class="mode-tab" id="tab-wall" onclick="switchMode('wall')">🃏 字卡墙</button>
     </div>
   </div>
 
@@ -766,19 +741,6 @@ function checkDailyComplete() {
   return learnedToday.length >= getDailyCount();
 }
 
-function ensureDefaultRewards() {
-  let rewards = ChineseStore.getRewards();
-  if (!rewards.length) {
-    rewards = [
-      { id: uid(), name: '小贴纸', cost: 20, icon: 'sticker', stock: 999 },
-      { id: uid(), name: '看一集动画', cost: 50, icon: 'game', stock: 999 },
-      { id: uid(), name: '小零食', cost: 30, icon: 'snack', stock: 999 },
-      { id: uid(), name: '新绘本', cost: 100, icon: 'book', stock: 999 }
-    ];
-    ChineseStore.saveRewards(rewards);
-  }
-}
-
 // ============================================================
 // 模式切换与渲染入口
 // ============================================================
@@ -803,7 +765,7 @@ function renderGame() {
   if (currentMode === 'today') renderToday(area);
   else if (currentMode === 'practice') renderPractice(area);
   else if (currentMode === 'map') renderLevelMap(area);
-  else if (currentMode === 'shop') renderShop(area);
+  else if (currentMode === 'wall') renderWall(area);
 }
 
 // ============================================================
@@ -1071,50 +1033,38 @@ function startLevel(level) {
 }
 
 // ============================================================
-// 积分商城
+// 字卡墙
 // ============================================================
-function renderShop(area) {
-  const rewards = ChineseStore.getRewards();
-  const exchanges = ChineseStore.getExchanges();
-  const points = ChineseStore.getPoints();
-
-  let html = '<div class="section-title">积分商城<span class="badge">我的积分 ' + points + '</span></div>';
-  html += '<div class="shop-grid">';
-  rewards.forEach(r => {
-    const can = points >= r.cost;
-    html += '<div class="shop-item">' +
-      '<div class="shop-icon">' + (REWARD_ICONS[r.icon] || REWARD_ICONS.sticker) + '</div>' +
-      '<div class="shop-name">' + r.name + '</div>' +
-      '<div class="shop-cost">' + r.cost + ' <span class="coin">积分</span></div>' +
-      '<button class="btn-redeem" ' + (can ? '' : 'disabled') + ' onclick="redeemReward(\'' + r.id + '\')">' + (can ? '兑换' : '积分不够') + '</button>' +
-      '</div>';
+function renderWall(area) {
+  const learnedIds = Object.keys(load(ChineseStore.progress, {}));
+  const byTag = {};
+  CHAR_DB.forEach(c => {
+    byTag[c.tag] = byTag[c.tag] || [];
+    byTag[c.tag].push(c);
   });
-  html += '</div>';
+  const tags = Object.keys(byTag);
 
-  if (exchanges.length) {
-    html += '<div class="section-title" style="margin-top:24px">兑换记录</div><div class="exchange-list">';
-    exchanges.slice().reverse().forEach(ex => {
-      html += '<div class="exchange-item">' +
-        '<div><div class="ex-name">' + ex.name + '</div><div class="ex-date">' + ex.date + '</div></div>' +
-        '<div class="ex-status pending">待确认</div>' +
+  let html = '<div class="section-title">字卡墙<span class="badge">已学 ' + learnedIds.length + ' / ' + CHAR_DB.length + '</span></div>';
+  html += '<div class="wall-tip">点一点字卡，复习学过的字，预习还没学的字～</div>';
+
+  tags.forEach(tag => {
+    const list = byTag[tag];
+    const learnedCount = list.filter(c => learnedIds.includes(c.id)).length;
+    html += '<div class="wall-section">';
+    html += '<div class="wall-section-title">' + tag + '<span>' + learnedCount + '/' + list.length + '</span></div>';
+    html += '<div class="char-grid">';
+    list.forEach(c => {
+      const learned = learnedIds.includes(c.id);
+      html += '<div class="char-card ' + (learned ? 'learned' : '') + '" onclick="openCharDetail(\'' + c.id + '\')">' +
+        '<div class="learned-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l6 6 10-14"/></svg></div>' +
+        '<div class="ch-emoji">' + c.emoji + '</div>' +
+        '<div class="ch-big">' + c.char + '</div>' +
+        '<div class="ch-pinyin">' + c.pinyin + '</div>' +
         '</div>';
     });
-    html += '</div>';
-  }
+    html += '</div></div>';
+  });
   area.innerHTML = html;
-}
-
-function redeemReward(rid) {
-  const rewards = ChineseStore.getRewards();
-  const r = rewards.find(x => x.id === rid);
-  if (!r) return;
-  if (ChineseStore.getPoints() < r.cost) return;
-  ChineseStore.addPoints(-r.cost, '兑换 ' + r.name);
-  const exchanges = ChineseStore.getExchanges();
-  exchanges.push({ id: uid(), rewardId: rid, name: r.name, cost: r.cost, date: today(), status: 'pending' });
-  ChineseStore.saveExchanges(exchanges);
-  updateHeader();
-  showModal('🎉 兑换成功', '你兑换了“' + r.name + '”，请在家长端确认领取！', [{ text: '好的', action: renderGame }]);
 }
 
 // ============================================================
@@ -1187,7 +1137,6 @@ function init() {
   voiceOn = ChineseStore.getVoiceEnabled();
   speechRate = ChineseStore.getRate() || 0.7;
   currentStage = getStage();
-  ensureDefaultRewards();
   updateHeader();
   renderGame();
 

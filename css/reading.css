@@ -1,0 +1,340 @@
+/* ============================================================
+ * 阅读角样式：模式标签 / 书架 / 阅读器 / 诗词卡
+ * ============================================================ */
+
+/* ========== 模式标签 ========== */
+.mode-tabs {
+  display: flex;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 50px;
+  padding: 3px;
+  margin-top: 12px;
+}
+.mode-tab {
+  flex: 1;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+  background: transparent;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.mode-tab.active {
+  background: #fff;
+  color: #8E44AD;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ========== 书架 ========== */
+.shelf-tip {
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  font-size: 0.88rem;
+  color: #6B4C7A;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  padding-bottom: 24px;
+}
+.book-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 18px 12px 14px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.1),
+    0 4px 10px rgba(0, 0, 0, 0.05);
+  border: 2px solid #F1E6FA;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  position: relative;
+}
+.book-card:active {
+  transform: scale(0.96);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+.book-card:hover {
+  border-color: #D7BDE2;
+}
+.book-cover {
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+.book-title {
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: #6B4C7A;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.book-sub {
+  font-size: 0.78rem;
+  color: #9B59B6;
+  margin-bottom: 6px;
+}
+.book-desc {
+  font-size: 0.74rem;
+  color: #888;
+  line-height: 1.5;
+  min-height: 2.2em;
+}
+.book-tag {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 0.68rem;
+  background: #F5E8FF;
+  color: #8E44AD;
+  padding: 2px 10px;
+  border-radius: 50px;
+  font-weight: 700;
+}
+
+/* ========== 阅读器 ========== */
+.reader-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.btn-back {
+  background: #fff;
+  border: none;
+  color: #8E44AD;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  min-height: 42px;
+  white-space: nowrap;
+}
+.reader-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #333;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reader-stage {
+  border-radius: 20px;
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  transition: background 0.3s;
+}
+.reader-scene {
+  font-size: 4.2rem;
+  line-height: 1.2;
+  letter-spacing: 6px;
+  text-align: center;
+  word-break: break-all;
+}
+
+.reader-text {
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px;
+  margin-top: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  min-height: 90px;
+}
+.reader-main {
+  font-size: 1.15rem;
+  line-height: 1.9;
+  color: #4A4A4A;
+  text-align: center;
+  font-weight: 600;
+}
+.reader-sub {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #EEE;
+  font-size: 0.9rem;
+  color: #999;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.reader-progress {
+  text-align: center;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-top: 12px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.reader-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  padding-bottom: 24px;
+}
+.reader-btn {
+  flex: 1;
+  min-width: 92px;
+  background: #fff;
+  border: none;
+  color: #6B4C7A;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 12px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  min-height: 48px;
+  transition: transform 0.15s;
+}
+.reader-btn:active {
+  transform: scale(0.96);
+}
+.reader-btn.primary {
+  background: linear-gradient(135deg, #9B59B6 0%, #8E44AD 100%);
+  color: #fff;
+}
+
+/* ========== 诗词卡 ========== */
+.poem-card {
+  background: #fff;
+  border-radius: 24px;
+  padding: 24px 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+.poem-emoji {
+  font-size: 3rem;
+  text-align: center;
+  margin-bottom: 6px;
+}
+.poem-name {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #6B4C7A;
+  text-align: center;
+}
+.poem-author {
+  text-align: center;
+  color: #9B59B6;
+  font-size: 0.88rem;
+  margin-bottom: 18px;
+}
+
+.poem-lines {
+  background: linear-gradient(135deg, #FFFDF7 0%, #FFF5E0 100%);
+  border-radius: 16px;
+  padding: 14px 12px;
+  margin-bottom: 16px;
+}
+.poem-line {
+  padding: 10px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.poem-line.active {
+  background: #FFE8CC;
+}
+.poem-line-main {
+  flex: 1;
+  text-align: center;
+}
+.poem-pinyin {
+  font-size: 0.72rem;
+  color: #B0A89B;
+  letter-spacing: 1px;
+  line-height: 1.4;
+}
+.poem-text {
+  font-size: 1.22rem;
+  font-weight: 700;
+  color: #E6731C;
+  line-height: 1.7;
+  letter-spacing: 1px;
+}
+.poem-play {
+  font-size: 1rem;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+.poem-line.active .poem-play {
+  opacity: 1;
+}
+
+.poem-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.poem-actions .reader-btn {
+  min-width: 0;
+}
+
+.poem-section {
+  border-top: 1px solid #F0F0F0;
+  padding-top: 14px;
+  margin-top: 14px;
+}
+.poem-section-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #6B4C7A;
+  margin-bottom: 6px;
+}
+.poem-section p {
+  font-size: 0.92rem;
+  color: #777;
+  line-height: 1.8;
+}
+
+@media (max-width: 480px) {
+  .book-grid {
+    gap: 12px;
+  }
+  .book-card {
+    padding: 16px 10px 12px;
+  }
+  .book-cover {
+    font-size: 2.5rem;
+  }
+  .reader-scene {
+    font-size: 3.2rem;
+  }
+  .reader-stage {
+    min-height: 150px;
+  }
+  .reader-main {
+    font-size: 1.05rem;
+  }
+  .poem-text {
+    font-size: 1.1rem;
+  }
+}

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>积分商城</title>
+  <link rel="stylesheet" href="./css/common.css">
+  <script src="./js/utils.js"></script>
+  <script src="./js/chinese-data.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html { font-size: 18px; }
+    :root {
+      --primary: #FF8C42;
+      --primary-dark: #E6731C;
+      --yellow: #FFD93D;
+      --green: #6BCB77;
+      --green-light: #E8F8EA;
+      --text: #4A4A4A;
+      --text-light: #888;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --radius-lg: 24px;
+      --shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(135deg, #FFF9E6 0%, #FFE8CC 100%);
+      min-height: 100vh;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 顶部栏 */
+    .topbar {
+      background: linear-gradient(135deg, #FF8C42 0%, #FFB347 100%);
+      color: #fff;
+      padding: 16px 20px 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(230, 115, 28, 0.3);
+    }
+    .topbar-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .topbar-title { font-size: 1.4rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .topbar-title a { color: #fff; text-decoration: none; }
+    .topbar-actions { display: flex; gap: 10px; align-items: center; font-size: 0.9rem; }
+    .topbar-actions .points { background: rgba(255, 255, 255, 0.2); padding: 6px 12px; border-radius: 50px; font-weight: 700; }
+
+    .container { padding: 16px; max-width: 720px; margin: 0 auto; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+
+    .section-title {
+      font-size: 1.05rem; font-weight: 800; color: var(--text);
+      margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    }
+    .badge {
+      background: #FFF3E0; color: var(--primary-dark); font-size: 0.75rem;
+      padding: 3px 10px; border-radius: 50px; font-weight: 700;
+    }
+
+    .shop-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .shop-item {
+      background: #fff;
+      border: 2px solid #FFE8D6;
+      border-radius: var(--radius);
+      padding: 16px 12px;
+      text-align: center;
+      position: relative;
+      box-shadow: var(--shadow);
+    }
+    .shop-icon { width: 48px; height: 48px; margin: 0 auto 8px; color: var(--primary); }
+    .shop-icon svg { width: 100%; height: 100%; }
+    .shop-name { font-weight: 800; font-size: 0.95rem; margin-bottom: 4px; }
+    .shop-cost { font-size: 0.9rem; color: var(--primary); font-weight: 800; margin-bottom: 12px; }
+    .shop-cost .coin { font-size: 0.7rem; color: var(--text-light); font-weight: 500; }
+    .btn-redeem {
+      width: 100%; border: none; border-radius: 18px; padding: 10px 0;
+      font-weight: 700; font-size: 0.9rem; background: var(--primary); color: #fff;
+      cursor: pointer; min-height: 44px; transition: transform 0.15s;
+    }
+    .btn-redeem:active { transform: scale(0.96); }
+    .btn-redeem:disabled { background: #DDD; color: #999; cursor: not-allowed; transform: none; }
+    .pending-badge {
+      position: absolute; top: 6px; right: 6px;
+      background: var(--yellow); color: var(--text); font-size: 0.6rem;
+      font-weight: 700; padding: 2px 6px; border-radius: 6px;
+    }
+
+    .exchange-list { margin-top: 24px; }
+    .exchange-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0; border-bottom: 1px solid #F0F0F0;
+    }
+    .exchange-item .ex-name { font-weight: 700; font-size: 0.9rem; }
+    .exchange-item .ex-date { font-size: 0.75rem; color: var(--text-light); margin-top: 2px; }
+    .exchange-item .ex-status { font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 8px; }
+    .exchange-item .ex-status.pending { background: var(--yellow); color: var(--text); }
+    .exchange-item .ex-status.confirmed { background: var(--green-light); color: var(--green); }
+
+    .empty-tip {
+      background: #fff; border-radius: var(--radius); padding: 24px; text-align: center;
+      color: var(--text-light); box-shadow: var(--shadow);
+    }
+
+    @media (max-width: 480px) {
+      html { font-size: 16px; }
+      .container { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-row">
+      <div class="topbar-title">
+        <a href="./index.html">←</a>
+        <span>🎁 积分商城</span>
+      </div>
+      <div class="topbar-actions">
+        <span class="points">💎 <span data-points>0</span></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="shopArea"></div>
+  </main>
+
+  <script>
+    function uid() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    }
+    function today() {
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function ensureDefaultRewards() {
+      let rewards = ChineseStore.getRewards();
+      if (!rewards.length) {
+        rewards = [
+          { id: uid(), name: '小贴纸', cost: 20, icon: 'sticker', stock: 999 },
+          { id: uid(), name: '看一集动画', cost: 50, icon: 'game', stock: 999 },
+          { id: uid(), name: '小零食', cost: 30, icon: 'snack', stock: 999 },
+          { id: uid(), name: '新绘本', cost: 100, icon: 'book', stock: 999 }
+        ];
+        ChineseStore.saveRewards(rewards);
+      }
+    }
+
+    function updateHeader() {
+      document.querySelectorAll('[data-points]').forEach(el => {
+        el.textContent = ChineseStore.getPoints();
+      });
+    }
+
+    function renderShop() {
+      ensureDefaultRewards();
+      const rewards = ChineseStore.getRewards();
+      const exchanges = ChineseStore.getExchanges();
+      const points = ChineseStore.getPoints();
+      const area = document.getElementById('shopArea');
+
+      let html = '<div class="section-title">积分商城<span class="badge">我的积分 ' + points + '</span></div>';
+      html += '<div class="shop-grid">';
+      rewards.forEach(r => {
+        const pending = exchanges.filter(e => e.rewardId === r.id && e.status === 'pending').length;
+        const can = points >= r.cost;
+        html += '<div class="shop-item">' +
+          (pending ? '<div class="pending-badge">待领 ' + pending + '</div>' : '') +
+          '<div class="shop-icon">' + (REWARD_ICONS[r.icon] || REWARD_ICONS.sticker) + '</div>' +
+          '<div class="shop-name">' + r.name + '</div>' +
+          '<div class="shop-cost">' + r.cost + ' <span class="coin">积分</span></div>' +
+          '<button class="btn-redeem" ' + (can ? '' : 'disabled') + ' onclick="redeemReward(\'' + r.id + '\')">' + (can ? '兑换' : '积分不够') + '</button>' +
+          '</div>';
+      });
+      html += '</div>';
+
+      if (exchanges.length) {
+        html += '<div class="section-title" style="margin-top:24px">兑换记录</div><div class="exchange-list">';
+        exchanges.slice().reverse().forEach(ex => {
+          html += '<div class="exchange-item">' +
+            '<div><div class="ex-name">' + ex.name + '</div><div class="ex-date">' + ex.date + '</div></div>' +
+            '<div class="ex-status ' + (ex.status || 'pending') + '">' + (ex.status === 'confirmed' ? '已领取' : '待确认') + '</div>' +
+            '</div>';
+        });
+        html += '</div>';
+      } else {
+        html += '<div class="empty-tip" style="margin-top:24px">还没有兑换记录哦～<br>去识字、英语、数学赚积分吧！</div>';
+      }
+      area.innerHTML = html;
+    }
+
+    function redeemReward(rid) {
+      const rewards = ChineseStore.getRewards();
+      const r = rewards.find(x => x.id === rid);
+      if (!r) return;
+      if (ChineseStore.getPoints() < r.cost) return;
+      ChineseStore.addPoints(-r.cost, '兑换 ' + r.name);
+      const exchanges = ChineseStore.getExchanges();
+      exchanges.push({ id: uid(), rewardId: rid, name: r.name, cost: r.cost, date: today(), status: 'pending' });
+      ChineseStore.saveExchanges(exchanges);
+      updateHeader();
+      renderShop();
+      showModal('🎉 兑换成功', '你兑换了“' + r.name + '”，请在家长端确认领取！', [{ text: '好的', className: 'btn-modal-ok' }]);
+    }
+
+    updateHeader();
+    renderShop();
+  </script>
+</body>
+</html>

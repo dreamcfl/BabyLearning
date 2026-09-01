@@ -133,6 +133,50 @@ body {
 .modal-buttons { display: flex; gap: 10px; }
 .modal-buttons button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; }
 
+.study-time-today {
+  background: linear-gradient(135deg, #FFF9F0 0%, #FFE8CC 100%);
+  border: 2px solid #FFD93D;
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.study-time-today .stt-icon { font-size: 2rem; margin-bottom: 6px; }
+.study-time-today .stt-value { font-size: 2.2rem; font-weight: 900; color: #E6A817; line-height: 1.2; }
+.study-time-today .stt-label { font-size: 0.9rem; color: var(--text-light); margin-top: 4px; }
+.study-time-today .stt-tip { font-size: 0.78rem; color: #B0A89B; margin-top: 8px; }
+
+.study-time-list { max-height: 420px; overflow-y: auto; }
+.study-time-day {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #F0F0F0;
+}
+.study-time-day:last-child { border-bottom: none; }
+.study-time-day .std-date { font-weight: 700; color: #4A4A4A; }
+.study-time-day .std-date .std-today {
+  font-size: 0.7rem;
+  background: #FFD93D;
+  color: #856404;
+  padding: 2px 8px;
+  border-radius: 50px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.study-time-day .std-bar-wrap {
+  flex: 1;
+  margin: 0 12px;
+  height: 10px;
+  background: #F0F0F0;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.study-time-day .std-bar { height: 100%; background: linear-gradient(90deg, #FFD93D, #FF8C42); border-radius: 5px; }
+.study-time-day .std-value { font-weight: 800; color: #E6A817; white-space: nowrap; font-size: 0.95rem; }
+
 @media (max-width: 480px) {
   html { font-size: 16px; }
   .container { padding: 12px; }
@@ -177,11 +221,19 @@ body {
       <div class="stat-card"><div class="stat-num" id="pRewards">0</div><div class="stat-label">待确认兑换</div></div>
     </div>
 
+    <div class="study-time-today">
+      <div class="stt-icon">⏱️</div>
+      <div class="stt-value" id="pStudyTimeToday">0分</div>
+      <div class="stt-label">今日学习时长</div>
+      <div class="stt-tip">超过 30 分钟会提醒孩子休息</div>
+    </div>
+
     <!-- 学科切换 -->
     <div class="subject-tabs">
       <div class="subject-tab active" onclick="switchSubject('chinese')"><span class="st-icon">📖</span>识字</div>
       <div class="subject-tab" onclick="switchSubject('english')"><span class="st-icon">🔤</span>英语</div>
       <div class="subject-tab" onclick="switchSubject('math')"><span class="st-icon">🔢</span>数学</div>
+      <div class="subject-tab" onclick="switchSubject('studyTime')"><span class="st-icon">⏱️</span>时长</div>
       <div class="subject-tab" onclick="switchSubject('settings')"><span class="st-icon">⚙️</span>设置</div>
     </div>
 
@@ -258,18 +310,21 @@ function renderOverview() {
 
   const pending = rewards.exchanges ? rewards.exchanges.filter(e => e.status === 'pending').length : 0;
   document.getElementById('pRewards').textContent = pending;
+
+  document.getElementById('pStudyTimeToday').textContent = formatStudyDuration(getTodayStudySeconds());
 }
 
 function switchSubject(subject) {
   currentSubject = subject;
   document.querySelectorAll('.subject-tab').forEach((t, i) => {
-    const keys = ['chinese', 'english', 'math', 'settings'];
+    const keys = ['chinese', 'english', 'math', 'studyTime', 'settings'];
     t.classList.toggle('active', keys[i] === subject);
   });
 
   if (subject === 'chinese') renderChinese();
   else if (subject === 'english') renderEnglish();
   else if (subject === 'math') renderMath();
+  else if (subject === 'studyTime') renderStudyTime();
   else if (subject === 'settings') renderSettings();
 }
 
@@ -397,6 +452,37 @@ function saveMathDaily() {
     saveSubjectData('math', data);
     showParentModal('ok', `每日数学题数已设为 ${val} 个`);
   }
+}
+
+// ========== 学习时长 ==========
+function renderStudyTime() {
+  const summary = getStudyTimeSummary(30);
+  const maxSeconds = Math.max(...summary.map(s => s.seconds), 1);
+
+  document.getElementById('subjectContent').innerHTML = `
+    <div class="card">
+      <div class="card-title">⏱️ 每日学习时长</div>
+      <div class="study-time-list">
+        ${summary.map(s => {
+          const pct = Math.round((s.seconds / maxSeconds) * 100);
+          return `<div class="study-time-day">
+            <div class="std-date">${s.date}${s.current ? '<span class="std-today">今天</span>' : ''}</div>
+            <div class="std-bar-wrap"><div class="std-bar" style="width:${pct}%"></div></div>
+            <div class="std-value">${formatStudyDuration(s.seconds)}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">💡 休息提醒规则</div>
+      <div style="color:#888;font-size:0.95rem;line-height:1.7;">
+        · 学习满 30 分钟，首次提醒休息<br>
+        · 满 1 小时后再次提醒<br>
+        · 之后每隔 1 小时提醒一次<br>
+        · 点击弹窗即可关闭提醒
+      </div>
+    </div>
+  `;
 }
 
 // ========== 设置 ==========
