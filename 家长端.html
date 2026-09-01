@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>家长端 · 宝宝学习台</title>
+<script src="./js/utils.js"></script>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { font-size: 18px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(135deg, #F3F0FF 0%, #FFEFF6 100%);
+  color: #333;
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+::root {
+  --purple: #8B5CF6;
+  --purple-dark: #7C3AED;
+  --purple-light: #C4B5FD;
+  --orange: #FF8C42;
+  --green: #6BCB77;
+  --red: #FF6B6B;
+  --teal: #4ECDC4;
+  --blue: #4A90E2;
+  --text: #4A4A4A;
+  --text-light: #888;
+  --shadow: 0 4px 16px rgba(0,0,0,0.08);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-lg: 24px;
+}
+
+.topbar {
+  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+  color: #fff;
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(124,58,237,0.3);
+}
+.topbar-row { display: flex; align-items: center; justify-content: space-between; }
+.topbar-title { font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+.topbar-title a { color: #fff; text-decoration: none; }
+
+.container { max-width: 720px; margin: 0 auto; padding: 16px; }
+.card { background: #fff; border-radius: var(--radius); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.card-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; color: #7C3AED; }
+
+.parent-locked { text-align: center; padding: 60px 20px; }
+.parent-locked .lock-icon { font-size: 4rem; margin-bottom: 16px; }
+.parent-locked h2 { font-size: 1.5rem; margin-bottom: 8px; color: #7C3AED; }
+.parent-locked p { color: #888; margin-bottom: 24px; }
+.pin-input-area { display: flex; gap: 12px; justify-content: center; margin-bottom: 16px; }
+.pin-input {
+  width: 56px; height: 64px; text-align: center; font-size: 1.8rem; font-weight: 800;
+  border: 3px solid #C4B5FD; border-radius: var(--radius-sm); background: #fff; color: #7C3AED; outline: none;
+}
+.pin-input:focus { border-color: #8B5CF6; }
+.btn-pin {
+  background: #8B5CF6; color: #fff; border: none; padding: 14px 32px; border-radius: 50px;
+  font-size: 1.1rem; font-weight: 700; cursor: pointer; min-height: 50px;
+}
+.pin-error { color: #FF6B6B; font-size: 0.95rem; margin-top: 8px; display: none; }
+.pin-error.show { display: block; }
+.parent-panel { display: none; }
+.parent-panel.show { display: block; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: #fff; border-radius: var(--radius); padding: 18px; text-align: center; box-shadow: var(--shadow); }
+.stat-card .stat-num { font-size: 1.9rem; font-weight: 900; color: #8B5CF6; line-height: 1.2; }
+.stat-card .stat-label { font-size: 0.85rem; color: var(--text-light); margin-top: 4px; }
+
+.subject-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.subject-tab {
+  flex: 1; background: #F3F0FF; border: 2px solid #DDD6FE; border-radius: var(--radius-sm);
+  padding: 10px; text-align: center; cursor: pointer; font-weight: 700; color: #4A4A4A;
+  transition: all 0.2s;
+}
+.subject-tab.active { background: #8B5CF6; border-color: #7C3AED; color: #fff; }
+.subject-tab .st-icon { font-size: 1.3rem; display: block; margin-bottom: 2px; }
+
+.progress-bar { height: 12px; background: #F0F0F0; border-radius: 6px; overflow: hidden; margin-top: 6px; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #8B5CF6, #C4B5FD); border-radius: 6px; transition: width 0.3s; }
+
+.setting-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #F0F0F0; gap: 12px; }
+.setting-row:last-child { border-bottom: none; }
+.setting-row .setting-label { font-size: 1rem; font-weight: 600; }
+.setting-row input[type="number"] { width: 70px; padding: 8px; font-size: 1.1rem; text-align: center; border: 2px solid #DDD6FE; border-radius: 8px; outline: none; }
+.setting-row input[type="text"] { width: 120px; padding: 8px 10px; font-size: 1rem; border: 2px solid #DDD6FE; border-radius: 8px; outline: none; }
+.btn-small { padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; min-height: 36px; }
+.btn-confirm { background: #6BCB77; color: #fff; }
+.btn-delete { background: #FF9999; color: #fff; }
+.btn-add {
+  background: #8B5CF6; color: #fff; border: none; padding: 12px 20px; border-radius: 8px;
+  font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 8px; width: 100%; min-height: 50px;
+}
+.btn-danger {
+  background: #fff; color: #FF6B6B; border: 2px solid #FF9999; padding: 12px 20px;
+  border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; width: 100%; min-height: 50px; margin-top: 12px;
+}
+.btn-export {
+  background: #4ECDC4; color: #fff; border: none; padding: 12px 20px; border-radius: 8px;
+  font-size: 1rem; font-weight: 700; cursor: pointer; width: 100%; min-height: 50px; margin-top: 8px;
+}
+
+.reward-manage-item {
+  display: flex; align-items: center; justify-content: space-between; padding: 10px 12px;
+  background: #F9F7FF; border-radius: var(--radius-sm); margin-bottom: 8px; gap: 8px; font-size: 0.95rem;
+}
+.exchange-item {
+  display: flex; align-items: center; justify-content: space-between; padding: 10px 12px;
+  background: #FFF9F0; border-radius: var(--radius-sm); margin-bottom: 8px; font-size: 0.95rem; gap: 8px;
+}
+.exchange-item .ex-status { font-size: 0.8rem; padding: 3px 10px; border-radius: 50px; font-weight: 700; white-space: nowrap; }
+.ex-status.pending { background: #FFD93D; color: #856404; }
+.ex-status.confirmed { background: #6BCB77; color: #fff; }
+
+.data-row { display: flex; gap: 10px; margin-top: 12px; }
+.data-row button, .data-row label { flex: 1; }
+.hidden-file { display: none; }
+
+.empty-tip { color: #888; text-align: center; padding: 16px 0; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 400; padding: 20px; }
+.modal-overlay.show { display: flex; }
+.modal-box { background: #fff; border-radius: var(--radius-lg); padding: 24px 20px; max-width: 400px; width: 100%; text-align: center; }
+.modal-box h3 { font-size: 1.3rem; margin-bottom: 8px; }
+.modal-box p { color: #888; margin-bottom: 16px; }
+.modal-buttons { display: flex; gap: 10px; }
+.modal-buttons button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+
+@media (max-width: 480px) {
+  html { font-size: 16px; }
+  .container { padding: 12px; }
+  .pin-input { width: 48px; height: 56px; font-size: 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-row">
+    <div class="topbar-title">
+      <a href="./index.html">←</a>
+      <span>🔒 家长端</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <!-- PIN 验证 -->
+  <div class="parent-locked" id="parentLocked">
+    <div class="lock-icon">🔐</div>
+    <h2>家长管理中心</h2>
+    <p id="pinPrompt">请输入 4 位密码进入</p>
+    <div class="pin-input-area">
+      <input type="tel" class="pin-input" maxlength="1" inputmode="numeric" data-idx="0">
+      <input type="tel" class="pin-input" maxlength="1" inputmode="numeric" data-idx="1">
+      <input type="tel" class="pin-input" maxlength="1" inputmode="numeric" data-idx="2">
+      <input type="tel" class="pin-input" maxlength="1" inputmode="numeric" data-idx="3">
+    </div>
+    <button class="btn-pin" onclick="checkParentPin()">进入</button>
+    <div class="pin-error" id="pinError">密码错误，请重试</div>
+  </div>
+
+  <!-- 家长面板 -->
+  <div class="parent-panel" id="parentPanel">
+    <!-- 总览 -->
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num" id="pPoints">0</div><div class="stat-label">累计积分</div></div>
+      <div class="stat-card"><div class="stat-num" id="pStreak">0</div><div class="stat-label">连续学习</div></div>
+      <div class="stat-card"><div class="stat-num" id="pDays">0</div><div class="stat-label">学习天数</div></div>
+      <div class="stat-card"><div class="stat-num" id="pRewards">0</div><div class="stat-label">待确认兑换</div></div>
+    </div>
+
+    <!-- 学科切换 -->
+    <div class="subject-tabs">
+      <div class="subject-tab active" onclick="switchSubject('chinese')"><span class="st-icon">📖</span>识字</div>
+      <div class="subject-tab" onclick="switchSubject('english')"><span class="st-icon">🔤</span>英语</div>
+      <div class="subject-tab" onclick="switchSubject('math')"><span class="st-icon">🔢</span>数学</div>
+      <div class="subject-tab" onclick="switchSubject('settings')"><span class="st-icon">⚙️</span>设置</div>
+    </div>
+
+    <div id="subjectContent"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box" id="modalBox"></div>
+</div>
+
+<script>
+let currentSubject = 'chinese';
+
+// 初始化 PIN 输入
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.pin-input').forEach((inp, i, arr) => {
+    inp.addEventListener('input', function() {
+      this.value = this.value.replace(/\D/g, '');
+      if (this.value && i < arr.length - 1) arr[i + 1].focus();
+      if (i === arr.length - 1 && this.value) setTimeout(checkParentPin, 200);
+    });
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Backspace' && !this.value && i > 0) arr[i - 1].focus();
+      if (e.key === 'Enter') checkParentPin();
+    });
+  });
+
+  const savedPin = getPin();
+  document.getElementById('pinPrompt').textContent = savedPin ? '请输入 4 位密码进入' : '首次使用，请设置 4 位密码';
+});
+
+function checkParentPin() {
+  const inputs = document.querySelectorAll('.pin-input');
+  const pin = Array.from(inputs).map(i => i.value).join('');
+  if (pin.length < 4) return;
+
+  const savedPin = getPin();
+  if (!savedPin) {
+    setPin(pin);
+    enterParentPanel();
+  } else if (pin === savedPin) {
+    enterParentPanel();
+  } else {
+    document.getElementById('pinError').classList.add('show');
+    inputs.forEach(i => i.value = '');
+    inputs[0].focus();
+  }
+}
+
+function enterParentPanel() {
+  document.getElementById('parentLocked').style.display = 'none';
+  document.getElementById('parentPanel').classList.add('show');
+  renderOverview();
+  switchSubject('chinese');
+}
+
+function renderOverview() {
+  const profile = getProfile();
+  const rewards = getRewards();
+  document.getElementById('pPoints').textContent = profile.points;
+  document.getElementById('pStreak').textContent = profile.streak;
+
+  // 学习天数：三科去重
+  const dates = new Set();
+  const chinese = getSubjectData('chinese');
+  const english = getSubjectData('english');
+  const math = getSubjectData('math');
+  Object.keys(chinese.dailyLog || {}).forEach(d => dates.add(d));
+  Object.keys(english.gameStats || {}).forEach(() => {});
+  // 英语/数学没按日期存，用有记录即算一天，这里简单用 profile.lastLearnDate
+  if (profile.lastLearnDate) dates.add(profile.lastLearnDate);
+  document.getElementById('pDays').textContent = dates.size;
+
+  const pending = rewards.exchanges ? rewards.exchanges.filter(e => e.status === 'pending').length : 0;
+  document.getElementById('pRewards').textContent = pending;
+}
+
+function switchSubject(subject) {
+  currentSubject = subject;
+  document.querySelectorAll('.subject-tab').forEach((t, i) => {
+    const keys = ['chinese', 'english', 'math', 'settings'];
+    t.classList.toggle('active', keys[i] === subject);
+  });
+
+  if (subject === 'chinese') renderChinese();
+  else if (subject === 'english') renderEnglish();
+  else if (subject === 'math') renderMath();
+  else if (subject === 'settings') renderSettings();
+}
+
+// ========== 识字详情 ==========
+function renderChinese() {
+  const data = getSubjectData('chinese');
+  const log = data.dailyLog || {};
+  const learned = new Set();
+  Object.values(log).forEach(l => (l.learned || []).forEach(idx => learned.add(idx)));
+
+  const total = 277;
+  const pct = Math.round((learned.size / total) * 100);
+
+  document.getElementById('subjectContent').innerHTML = `
+    <div class="card">
+      <div class="card-title">📖 识字进度</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-weight:700;">
+        <span>已学 ${learned.size} / ${total} 字</span><span>${pct}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📅 每日任务设置</div>
+      <div class="setting-row">
+        <span class="setting-label">每日识字数量</span>
+        <div><input type="number" id="chineseDaily" min="1" max="10" value="${data.dailyCount || 5}"></div>
+      </div>
+      <button class="btn-add" onclick="saveChineseDaily()">保存设置</button>
+    </div>
+    <div class="card">
+      <div class="card-title">🏆 学习记录</div>
+      <div style="max-height:240px;overflow-y:auto;">
+        ${Object.keys(log).sort().reverse().map(date => {
+          const l = log[date];
+          return `<div style="padding:8px 0;border-bottom:1px solid #F0F0F0;">
+            <div style="font-weight:700;">${date}</div>
+            <div style="font-size:0.85rem;color:#888;">已学 ${(l.learned||[]).length} 字 · 练习 ${(l.practiced||[]).length} 次 · ${l.done?'完成':'未完成'}</div>
+          </div>`;
+        }).join('') || '<div class="empty-tip">暂无学习记录</div>'}
+      </div>
+    </div>
+  `;
+}
+
+function saveChineseDaily() {
+  const val = parseInt(document.getElementById('chineseDaily').value);
+  if (val >= 1 && val <= 10) {
+    const data = getSubjectData('chinese');
+    data.dailyCount = val;
+    saveSubjectData('chinese', data);
+    showParentModal('ok', `每日识字数量已设为 ${val} 个`);
+  }
+}
+
+// ========== 英语详情 ==========
+function renderEnglish() {
+  const data = getSubjectData('english');
+  const stats = data.gameStats || {};
+  const learned = data.learned || {};
+  const learnedCount = Object.keys(learned).length;
+
+  document.getElementById('subjectContent').innerHTML = `
+    <div class="card">
+      <div class="card-title">🔤 英语学习情况</div>
+      <div class="stat-grid" style="margin-bottom:0;">
+        <div class="stat-card"><div class="stat-num">${learnedCount}</div><div class="stat-label">已会单词</div></div>
+        <div class="stat-card"><div class="stat-num">${stats.listen || 0}</div><div class="stat-label">听音选图</div></div>
+        <div class="stat-card"><div class="stat-num">${stats.spell || 0}</div><div class="stat-label">字母拼图</div></div>
+        <div class="stat-card"><div class="stat-num">${stats.match || 0}</div><div class="stat-label">找朋友</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📅 每日任务设置</div>
+      <div class="setting-row">
+        <span class="setting-label">每日英语游戏数</span>
+        <div><input type="number" id="englishDaily" min="1" max="10" value="${data.dailyCount || 5}"></div>
+      </div>
+      <button class="btn-add" onclick="saveEnglishDaily()">保存设置</button>
+    </div>
+  `;
+}
+
+function saveEnglishDaily() {
+  const val = parseInt(document.getElementById('englishDaily').value);
+  if (val >= 1 && val <= 10) {
+    const data = getSubjectData('english');
+    data.dailyCount = val;
+    saveSubjectData('english', data);
+    showParentModal('ok', `每日英语游戏数已设为 ${val} 个`);
+  }
+}
+
+// ========== 数学详情 ==========
+function renderMath() {
+  const data = getSubjectData('math');
+  const stats = data.stats || { count: 0, compare: 0, addsub: 0, shape: 0, correct: 0, total: 0 };
+  const accuracy = stats.total ? Math.round((stats.correct / stats.total) * 100) : 0;
+
+  document.getElementById('subjectContent').innerHTML = `
+    <div class="card">
+      <div class="card-title">🔢 数学练习统计</div>
+      <div class="stat-grid" style="margin-bottom:0;">
+        <div class="stat-card"><div class="stat-num">${stats.total}</div><div class="stat-label">总题数</div></div>
+        <div class="stat-card"><div class="stat-num">${accuracy}%</div><div class="stat-label">正确率</div></div>
+        <div class="stat-card"><div class="stat-num">${stats.addsub}</div><div class="stat-label">加减法</div></div>
+        <div class="stat-card"><div class="stat-num">${stats.count}</div><div class="stat-label">数数字</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📅 每日任务设置</div>
+      <div class="setting-row">
+        <span class="setting-label">每日数学题数</span>
+        <div><input type="number" id="mathDaily" min="1" max="10" value="${data.dailyCount || 5}"></div>
+      </div>
+      <button class="btn-add" onclick="saveMathDaily()">保存设置</button>
+    </div>
+  `;
+}
+
+function saveMathDaily() {
+  const val = parseInt(document.getElementById('mathDaily').value);
+  if (val >= 1 && val <= 10) {
+    const data = getSubjectData('math');
+    data.dailyCount = val;
+    saveSubjectData('math', data);
+    showParentModal('ok', `每日数学题数已设为 ${val} 个`);
+  }
+}
+
+// ========== 设置 ==========
+function renderSettings() {
+  const rewards = getRewards();
+  const pending = rewards.exchanges ? rewards.exchanges.filter(e => e.status === 'pending') : [];
+
+  document.getElementById('subjectContent').innerHTML = `
+    <div class="card">
+      <div class="card-title">🎁 奖励管理</div>
+      <div id="rewardList">
+        ${(rewards.list || []).length ? (rewards.list || []).map(r => `
+          <div class="reward-manage-item">
+            <div><strong>${r.name}</strong> · ${r.cost} 积分</div>
+            <button class="btn-small btn-delete" onclick="deleteReward('${r.id}')">删除</button>
+          </div>
+        `).join('') : '<div class="empty-tip">还没有奖励</div>'}
+      </div>
+      <div class="setting-row" style="border-top:1px solid #F0F0F0;margin-top:12px;padding-top:12px;">
+        <input type="text" id="newRewardName" placeholder="奖励名称" style="flex:1;">
+        <input type="number" id="newRewardCost" placeholder="积分" min="1" style="width:90px;">
+        <button class="btn-small btn-confirm" onclick="addReward()">添加</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔄 兑换确认 <span style="margin-left:auto;background:#FFD93D;color:#856404;font-size:0.75rem;padding:2px 10px;border-radius:50px;">${pending.length}</span></div>
+      <div id="exchangeList">
+        ${pending.length ? pending.map(e => `
+          <div class="exchange-item">
+            <div><strong>${e.name}</strong><div style="font-size:0.8rem;color:#888;">${e.date} · ${e.cost} 积分</div></div>
+            <button class="btn-small btn-confirm" onclick="confirmExchange('${e.id}')">确认</button>
+          </div>
+        `).join('') : '<div class="empty-tip">暂无待确认兑换</div>'}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔐 安全设置</div>
+      <button class="btn-add" onclick="resetParentPin()">修改密码</button>
+      <button class="btn-export" onclick="exportAllData()">导出全部数据</button>
+      <div class="data-row">
+        <label class="btn-export" style="display:flex;align-items:center;justify-content:center;">
+          导入数据
+          <input type="file" class="hidden-file" accept=".json" onchange="importParentData(event)">
+        </label>
+        <button class="btn-danger" onclick="clearParentData()">清空全部数据</button>
+      </div>
+    </div>
+  `;
+}
+
+function addReward() {
+  const name = document.getElementById('newRewardName').value.trim();
+  const cost = parseInt(document.getElementById('newRewardCost').value);
+  if (!name || !cost || cost < 1) { showParentModal('ok', '请填写奖励名称和积分'); return; }
+
+  const rewards = getRewards();
+  rewards.list = rewards.list || [];
+  rewards.list.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), name, cost, icon: 'default' });
+  saveRewards(rewards);
+  renderSettings();
+  showParentModal('ok', `奖励「${name}」已添加`);
+}
+
+function deleteReward(id) {
+  showParentModal('confirm', '确定删除这个奖励吗？', () => {
+    const rewards = getRewards();
+    rewards.list = (rewards.list || []).filter(r => r.id !== id);
+    saveRewards(rewards);
+    renderSettings();
+  });
+}
+
+function confirmExchange(id) {
+  const rewards = getRewards();
+  rewards.exchanges = rewards.exchanges || [];
+  const ex = rewards.exchanges.find(e => e.id === id);
+  if (ex) {
+    ex.status = 'confirmed';
+    saveRewards(rewards);
+    renderSettings();
+    renderOverview();
+    showParentModal('ok', `「${ex.name}」已确认兑现`);
+  }
+}
+
+function resetParentPin() {
+  showParentModal('confirm', '修改密码需要先退出当前面板，重新进入时设置新密码。确定吗？', () => {
+    setPin('');
+    location.reload();
+  });
+}
+
+function importParentData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      showParentModal('confirm', '导入将覆盖当前所有数据，确定吗？', () => {
+        importAllData(JSON.stringify(data));
+        showParentModal('ok', '导入成功，页面将刷新', () => location.reload());
+      });
+    } catch (err) { showParentModal('ok', '导入失败，文件格式不正确'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function clearParentData() {
+  showParentModal('confirm-danger', '确定清空所有数据吗？此操作不可恢复，建议先导出备份！', () => {
+    clearAllData();
+    showParentModal('ok', '已清空，页面将刷新', () => location.reload());
+  });
+}
+
+// ========== 弹窗 ==========
+function showParentModal(type, message, callback) {
+  const overlay = document.getElementById('modalOverlay');
+  const box = document.getElementById('modalBox');
+  if (type === 'confirm' || type === 'confirm-danger') {
+    box.innerHTML = `<h3>${type === 'confirm-danger' ? '⚠️ 警告' : '确认'}</h3><p>${message}</p>
+      <div class="modal-buttons">
+        <button class="btn-small" style="background:#E0E0E0;color:#555;padding:12px;" onclick="closeParentModal()">取消</button>
+        <button class="btn-small" style="background:#FF6B6B;color:#fff;padding:12px;" onclick="parentModalConfirm()">确定</button>
+      </div>`;
+  } else {
+    box.innerHTML = `<h3>提示</h3><p>${message}</p>
+      <div class="modal-buttons"><button class="btn-small" style="background:#6BCB77;color:#fff;padding:12px;width:100%;" onclick="parentModalOk()">好的</button></div>`;
+  }
+  overlay.classList.add('show');
+  window._parentModalCallback = callback;
+}
+function parentModalConfirm() { closeParentModal(); if (window._parentModalCallback) window._parentModalCallback(); }
+function parentModalOk() { closeParentModal(); if (window._parentModalCallback) window._parentModalCallback(); }
+function closeParentModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+</script>
+
+</body>
+</html>

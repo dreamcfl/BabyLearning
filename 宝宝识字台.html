@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>宝宝识字台</title>
+<script src="./js/utils.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.0/dist/hanzi-writer.min.js"></script>
 <style>
 /* ========== 基础重置 ========== */
@@ -1148,7 +1149,7 @@ function saveVoiceUri() {
   const v = zhVoiceList.find(x => x.voiceURI === uri);
   if (v) {
     zhVoice = v;
-    save(K.voiceUri, uri);
+    save(ChineseStore.voiceUri, uri);
   }
   speak('你好');
 }
@@ -1237,58 +1238,35 @@ function startQuiz() {
 }
 
 // ============================================================
-// 存储
+// 存储（已接入 ChineseStore 兼容层）
 // ============================================================
-const PREFIX = 'wb_babychar_';
-const K = {
-  daily: PREFIX + 'dailyCount',
-  pin: PREFIX + 'pin',
-  progress: PREFIX + 'progress',
-  dailyLog: PREFIX + 'dailyLog',
-  points: PREFIX + 'points',
-  pointsHistory: PREFIX + 'pointsHistory',
-  rewards: PREFIX + 'rewards',
-  exchanges: PREFIX + 'exchanges',
-  streak: PREFIX + 'streak',
-  charCursor: PREFIX + 'charCursor',
-  mode: PREFIX + 'mode',
-  stage: PREFIX + 'stage',
-  voice: PREFIX + 'voice',
-  rate: PREFIX + 'rate',
-  voiceUri: PREFIX + 'voiceUri',
-};
-
-function today() { return new Date().toISOString().slice(0,10); }
-function yesterday() { const d = new Date(); d.setDate(d.getDate()-1); return d.toISOString().slice(0,10); }
-function load(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } }
-function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} }
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
-function getDailyCount() { return load(K.daily, 5); }
-function getCharCursor() { return load(K.charCursor, 0); }
-function getDailyLog() { return load(K.dailyLog, {}); }
-function getPoints() { return load(K.points, 0); }
-function getPointsHistory() { return load(K.pointsHistory, []); }
-function getRewards() { return load(K.rewards, []); }
-function getExchanges() { return load(K.exchanges, []); }
-function getStreak() { return load(K.streak, {count:0, lastDate:''}); }
-function getPin() { return load(K.pin, null); }
-function getStage() { return load(K.stage, 1); }
+function today() { return ChineseStore.today(); }
+function yesterday() { return ChineseStore.yesterday(); }
+function uid() { return ChineseStore.uid(); }
+function load(key, def) { return ChineseStore.load(key, def); }
+function save(key, val) { ChineseStore.save(key, val); }
+function getDailyCount() { return ChineseStore.getDailyCount(); }
+function getCharCursor() { return ChineseStore.getCharCursor(); }
+function getDailyLog() { return ChineseStore.getDailyLog(); }
+function getPoints() { return ChineseStore.getPoints(); }
+function getPointsHistory() { return ChineseStore.getPointsHistory(); }
+function getRewards() { return ChineseStore.getRewards(); }
+function getExchanges() { return ChineseStore.getExchanges(); }
+function getStreak() { return ChineseStore.getStreak(); }
+function getPin() { return ChineseStore.getPin(); }
+function getStage() { return ChineseStore.getStage(); }
 
 function addPoints(amount, desc) {
-  save(K.points, getPoints() + amount);
-  const hist = getPointsHistory();
-  hist.push({type: amount > 0 ? 'earn' : 'spend', amount: Math.abs(amount), date: today(), desc});
-  save(K.pointsHistory, hist);
+  ChineseStore.addPoints(amount, desc);
 }
 
 // ============================================================
 // 今日学习队列（在当前阶段内推进）
 // ============================================================
 function getStageCursor() {
-  // cursor 按阶段分别存，切阶段互不影响
-  return load(K.charCursor + '_s' + getStage(), 0);
+  return ChineseStore.getStageCursor(getStage());
 }
-function setStageCursor(v) { save(K.charCursor + '_s' + getStage(), v); }
+function setStageCursor(v) { ChineseStore.setStageCursor(getStage(), v); }
 
 function getTodayChars() {
   const stageChars = getStageChars(getStage());
@@ -1312,14 +1290,14 @@ function getTodayLog() {
       chars: getTodayChars().map(c => c.idx),
       learned: [], practiced: [], done: false
     };
-    save(K.dailyLog, log);
+    save(ChineseStore.dailyLog, log);
   } else if (log[t].stage !== cur && !log[t].done) {
     // 切换了学习阶段且今天尚未完成：按新阶段重排今日任务
     log[t].stage = cur;
     log[t].chars = getTodayChars().map(c => c.idx);
     log[t].learned = [];
     log[t].practiced = [];
-    save(K.dailyLog, log);
+    save(ChineseStore.dailyLog, log);
   }
   return log[t];
 }
@@ -1385,7 +1363,7 @@ function renderStageTabs() {
 
 function switchStage(s) {
   if (Number(s) === getStage()) return;
-  save(K.stage, Number(s));
+  save(ChineseStore.stage, Number(s));
   renderStageTabs();
   renderCharGrid();
   renderPractice();
@@ -1503,7 +1481,7 @@ function closeCharDetail(idx) {
   if (isNew) {
     if (!log[t].learned) log[t].learned = [];
     log[t].learned.push(idx);
-    save(K.dailyLog, log);
+    save(ChineseStore.dailyLog, log);
     addPoints(2, `识字：${CHAR_DB[idx].char}`);
   }
 
@@ -1684,7 +1662,7 @@ function pickOption(el, idx) {
   if (!log[t].practiced) log[t].practiced = [];
   if (!log[t].practiced.includes(c.idx)) {
     log[t].practiced.push(c.idx);
-    save(K.dailyLog, log);
+    save(ChineseStore.dailyLog, log);
   }
 
   if (isCorrect) { addPoints(3, `练习答对：${c.char}`); renderPointsOverview(); }
@@ -1777,7 +1755,7 @@ function checkDailyComplete() {
 
   if (allLearned && allPracticed && !tLog.done) {
     tLog.done = true;
-    save(K.dailyLog, log);
+    save(ChineseStore.dailyLog, log);
     addPoints(5, '每日全部完成奖励');
 
     const streak = getStreak();
@@ -1785,7 +1763,7 @@ function checkDailyComplete() {
     if (streak.lastDate === y) streak.count++;
     else if (streak.lastDate !== t) streak.count = 1;
     streak.lastDate = t;
-    save(K.streak, streak);
+    ChineseStore.saveStreak(streak);
 
     // 推进当前阶段的 cursor
     setStageCursor(getStageCursor() + getDailyCount());
@@ -1899,7 +1877,7 @@ function redeemReward(rewardId) {
     addPoints(-r.cost, `兑换：${r.name}`);
     const exchanges = getExchanges();
     exchanges.push({ id: uid(), rewardId, name: r.name, cost: r.cost, date: today(), status: 'pending' });
-    save(K.exchanges, exchanges);
+    ChineseStore.saveExchanges(exchanges);
     renderShop();
     renderPointsOverview();
     showModal('ok', `兑换成功！请找爸爸妈妈确认领取~`, null);
@@ -1941,7 +1919,7 @@ function checkPin() {
   const pin = Array.from(inputs).map(i => i.value).join('');
   const savedPin = getPin();
   if (pin.length < 4) return;
-  if (!savedPin) { save(K.pin, pin); enterParentPanel(); }
+  if (!savedPin) { ChineseStore.savePin(pin); enterParentPanel(); }
   else if (pin === savedPin) { enterParentPanel(); }
   else { document.getElementById('pinError').classList.add('show'); clearPinInputs(); }
 }
@@ -1954,7 +1932,7 @@ function enterParentPanel() {
 
 function resetPin() {
   showModal('confirm', '确定要修改密码吗？需要先验证当前密码。', () => {
-    save(K.pin, null);
+    ChineseStore.savePin(null);
     switchMode('parent');
     showModal('ok', '密码已重置，请重新设置新密码。', null);
   });
@@ -2009,25 +1987,25 @@ function renderParentPanel() {
 
 function saveStage() {
   const v = Number(document.getElementById('stageSelect').value);
-  save(K.stage, v);
+  save(ChineseStore.stage, v);
   showModal('ok', `已切换到「${RAW_DB[v].name}」阶段`, null);
 }
 function saveVoiceSetting() {
   voiceOn = document.getElementById('voiceSetting').checked;
-  save(K.voice, voiceOn);
+  ChineseStore.saveVoiceEnabled(voiceOn);
   updateVoiceBtn();
 }
 function saveRateSetting() {
   const v = parseFloat(document.getElementById('rateSetting').value);
   if (v >= 0.4 && v <= 1.2) {
     speechRate = v;
-    save(K.rate, v);
+    ChineseStore.saveRate(v);
     speak('你好');
   }
 }
 function toggleVoice() {
   voiceOn = !voiceOn;
-  save(K.voice, voiceOn);
+  ChineseStore.saveVoiceEnabled(voiceOn);
   updateVoiceBtn();
   if (!voiceOn && window.speechSynthesis) speechSynthesis.cancel();
 }
@@ -2056,7 +2034,7 @@ function confirmExchange(id) {
   const ex = exchanges.find(e => e.id === id);
   if (ex) {
     ex.status = 'confirmed';
-    save(K.exchanges, exchanges);
+    ChineseStore.saveExchanges(exchanges);
     renderConfirmList(); renderParentPanel(); renderShop();
     showModal('ok', `「${ex.name}」已确认兑现！`, null);
   }
@@ -2096,7 +2074,7 @@ function addReward() {
 
   const rewards = getRewards();
   rewards.push({ id: uid(), name, cost, icon });
-  save(K.rewards, rewards);
+  ChineseStore.saveRewards(rewards);
   document.getElementById('newRewardName').value = '';
   document.getElementById('newRewardCost').value = '';
   renderRewardManage(); renderShop();
@@ -2105,7 +2083,7 @@ function addReward() {
 
 function deleteReward(id) {
   showModal('confirm', '确定删除这个奖励吗？', () => {
-    save(K.rewards, getRewards().filter(r => r.id !== id));
+    ChineseStore.saveRewards(getRewards().filter(r => r.id !== id));
     renderRewardManage(); renderShop();
   });
 }
@@ -2113,7 +2091,7 @@ function deleteReward(id) {
 function saveDailyCount() {
   const val = parseInt(document.getElementById('dailyCount').value);
   if (val >= 1 && val <= 10) {
-    save(K.daily, val);
+    save(ChineseStore.daily, val);
     showModal('ok', `每日识字数量已设为 ${val} 个`, null);
   }
 }
@@ -2121,25 +2099,7 @@ function saveDailyCount() {
 // ============================================================
 // 数据导出导入
 // ============================================================
-function exportData() {
-  const data = {};
-  Object.values(K).forEach(key => {
-    const v = localStorage.getItem(key);
-    if (v) data[key] = JSON.parse(v);
-  });
-  // 阶段 cursor 是动态的，也要带上
-  Object.keys(localStorage).forEach(k => {
-    if (k.startsWith(PREFIX + 'charCursor_s')) data[k] = JSON.parse(localStorage.getItem(k));
-  });
-  data._exportTime = new Date().toISOString();
-  data._version = '2.0';
-
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `宝宝识字台_备份_${today()}.json`; a.click();
-  URL.revokeObjectURL(url);
-}
+function exportData() { exportAllData(); }
 
 function importData(event) {
   const file = event.target.files[0];
@@ -2149,9 +2109,7 @@ function importData(event) {
     try {
       const data = JSON.parse(e.target.result);
       showModal('confirm', '确定导入备份吗？这将覆盖当前数据。', () => {
-        Object.entries(data).forEach(([key, val]) => {
-          if (key.startsWith(PREFIX)) localStorage.setItem(key, JSON.stringify(val));
-        });
+        importAllData(JSON.stringify(data));
         showModal('ok', '导入成功！页面将刷新~', () => location.reload());
       });
     } catch(err) { showModal('ok', '导入失败，文件格式不对~', null); }
@@ -2162,8 +2120,7 @@ function importData(event) {
 
 function showClearConfirm() {
   showModal('confirm-danger', '确定清空所有数据吗？所有学习记录和积分都将丢失！建议先导出备份。', () => {
-    Object.values(K).forEach(key => localStorage.removeItem(key));
-    Object.keys(localStorage).filter(k => k.startsWith(PREFIX)).forEach(k => localStorage.removeItem(k));
+    clearAllData();
     showModal('ok', '已清空所有数据，页面将刷新~', () => location.reload());
   });
 }
@@ -2213,9 +2170,9 @@ function renderKidMode() {
 // 初始化
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
-  voiceOn = load(K.voice, true);
+  voiceOn = load(ChineseStore.voice, true);
   // 默认语速调慢到 0.6；老用户若存过旧值也一并收敛到更慢的区间
-  const savedRate = load(K.rate, 0.6);
+  const savedRate = load(ChineseStore.rate, 0.6);
   speechRate = Math.min(savedRate, 0.85);
   updateVoiceBtn();
   ensureVoiceReady();
@@ -2245,8 +2202,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  if (!localStorage.getItem(K.rewards)) {
-    save(K.rewards, [
+  if (ChineseStore.getRewards().length === 0) {
+    ChineseStore.saveRewards([
       { id: uid(), name: '小贴纸', cost: 10, icon: 'sticker' },
       { id: uid(), name: '看动画片30分钟', cost: 20, icon: 'tv' },
       { id: uid(), name: '吃冰淇淋', cost: 30, icon: 'ice' },
@@ -2256,12 +2213,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // 首次使用：从阶段 1 的前 5 个字开始，不留假数据
-  if (!localStorage.getItem(K.dailyLog)) {
-    save(K.stage, 1);
-    save(K.charCursor + '_s1', 0);
-    save(K.points, 0);
-    save(K.streak, { count: 0, lastDate: '' });
-    save(K.pointsHistory, []);
+  if (Object.keys(ChineseStore.getDailyLog()).length === 0) {
+    save(ChineseStore.stage, 1);
+    save(ChineseStore.charCursor + '_s1', 0);
+    ChineseStore.saveStreak({ count: 0, lastDate: '' });
+    save(ChineseStore.pointsHistory, []);
   }
 
   renderKidMode();

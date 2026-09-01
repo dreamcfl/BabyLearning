@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <title>宝宝识字台 · BabyLearning</title>
+  <title>宝宝学习台 · BabyLearning</title>
+  <link rel="stylesheet" href="./css/common.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html { font-size: 18px; }
@@ -18,73 +19,111 @@
       -webkit-font-smoothing: antialiased;
     }
     .card {
-      max-width: 520px; width: 100%;
+      max-width: 560px; width: 100%;
       background: #fff; border-radius: 28px;
-      padding: 40px 28px;
+      padding: 36px 24px;
       box-shadow: 0 12px 40px rgba(255, 140, 66, 0.18);
       text-align: center;
     }
-    .logo { font-size: 4.5rem; line-height: 1; margin-bottom: 12px; }
+    .logo { font-size: 4rem; line-height: 1; margin-bottom: 10px; }
     h1 {
-      font-size: 2rem; font-weight: 800; color: #E6731C;
-      margin-bottom: 8px; letter-spacing: 1px;
+      font-size: 1.9rem; font-weight: 800; color: #E6731C;
+      margin-bottom: 6px; letter-spacing: 1px;
     }
     .sub {
-      font-size: 0.95rem; color: #888; margin-bottom: 24px;
+      font-size: 0.95rem; color: #888; margin-bottom: 28px;
     }
-    .features {
-      display: grid; grid-template-columns: repeat(2, 1fr);
-      gap: 10px; margin-bottom: 28px; text-align: left;
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
     }
-    .feat {
-      background: #FFF9F0; border-radius: 14px;
-      padding: 12px; font-size: 0.88rem; color: #4A4A4A;
-      display: flex; align-items: center; gap: 8px;
+    .subject-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 22px 12px;
+      text-align: center;
+      text-decoration: none;
+      color: #4A4A4A;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      border: 2px solid transparent;
+      transition: transform 0.15s, box-shadow 0.15s;
     }
-    .feat .em { font-size: 1.4rem; }
-    .btn {
-      display: block; width: 100%;
-      background: linear-gradient(135deg, #FF8C42 0%, #E6731C 100%);
-      color: #fff; text-decoration: none;
-      padding: 18px 0; border-radius: 50px;
-      font-size: 1.2rem; font-weight: 800; letter-spacing: 2px;
-      box-shadow: 0 6px 18px rgba(230, 115, 28, 0.35);
-      transition: transform 0.15s;
+    .subject-card:active { transform: scale(0.96); }
+    .subject-card .subject-icon { font-size: 2.8rem; line-height: 1; margin-bottom: 10px; }
+    .subject-card h2 { font-size: 1.05rem; color: #E6731C; margin-bottom: 6px; }
+    .subject-card p { font-size: 0.74rem; color: #888; line-height: 1.4; }
+    .subject-card.parent {
+      background: linear-gradient(135deg, #FFF5FA 0%, #FFE8F0 100%);
+      border-color: #FF9FB2;
     }
-    .btn:active { transform: scale(0.97); }
+    .subject-card.parent h2 { color: #D45D79; }
+    .summary {
+      display: flex; justify-content: center; gap: 24px;
+      margin-bottom: 22px; font-size: 0.9rem; color: #666;
+    }
+    .summary span strong { color: #E6731C; font-size: 1.2rem; }
     .tip {
-      margin-top: 18px; font-size: 0.82rem; color: #B0A89B;
+      font-size: 0.78rem; color: #B0A89B;
       line-height: 1.6;
     }
     .tip strong { color: #E6731C; }
     @media (max-width: 480px) {
       html { font-size: 16px; }
-      .card { padding: 32px 22px; }
-      h1 { font-size: 1.7rem; }
+      .card { padding: 28px 18px; }
+      .features-grid { gap: 12px; }
+      .subject-card { padding: 18px 10px; }
+      .subject-card .subject-icon { font-size: 2.4rem; }
+      h1 { font-size: 1.6rem; }
     }
   </style>
 </head>
 <body>
   <main class="card">
-    <div class="logo">📖</div>
-    <h1>宝宝识字台</h1>
-    <div class="sub">专为 4–6 岁设计的趣味识字小工具</div>
+    <div class="logo">🎒</div>
+    <h1>宝宝学习台</h1>
+    <div class="sub">3–6 岁趣味启蒙小天地</div>
 
-    <div class="features">
-      <div class="feat"><span class="em">🀄</span><span>277 个分级汉字</span></div>
-      <div class="feat"><span class="em">🔊</span><span>真人朗读发音</span></div>
-      <div class="feat"><span class="em">✏️</span><span>笔顺动画 + 描红</span></div>
-      <div class="feat"><span class="em">🎮</span><span>三大趣味游戏</span></div>
-      <div class="feat"><span class="em">⭐</span><span>积分 + 奖励商城</span></div>
-      <div class="feat"><span class="em">📱</span><span>手机 / 平板通用</span></div>
+    <div class="summary">
+      <span>💎 <strong id="homePoints">0</strong> 积分</span>
+      <span>🔥 <strong id="homeStreak">0</strong> 天</span>
     </div>
 
-    <a class="btn" href="./宝宝识字台.html">开始学习 →</a>
+    <div class="features-grid">
+      <a class="subject-card" href="./宝宝识字台.html">
+        <div class="subject-icon">📖</div>
+        <h2>宝宝识字台</h2>
+        <p>分级汉字 · 笔顺动画 · 趣味游戏</p>
+      </a>
+      <a class="subject-card" href="./宝宝英语台.html">
+        <div class="subject-icon">🔤</div>
+        <h2>宝宝英语台</h2>
+        <p>单词卡片 · 听音选图 · 字母拼图</p>
+      </a>
+      <a class="subject-card" href="./宝宝数学台.html">
+        <div class="subject-icon">🔢</div>
+        <h2>宝宝数学台</h2>
+        <p>数字认知 · 比大小 · 加减法</p>
+      </a>
+      <a class="subject-card parent" href="./家长端.html">
+        <div class="subject-icon">🔒</div>
+        <h2>家长端</h2>
+        <p>三科统计 · 奖励管理 · 数据备份</p>
+      </a>
+    </div>
 
     <div class="tip">
       💡 首次打开建议用 <strong>Chrome / Safari</strong><br>
-      ⚠️ 笔顺动画需联网，数据存浏览器本地
+      ⚠️ 学习数据保存在浏览器本地，请及时到家长端备份
     </div>
   </main>
+
+  <script src="./js/utils.js"></script>
+  <script>
+    const profile = getProfile();
+    document.getElementById('homePoints').textContent = profile.points;
+    document.getElementById('homeStreak').textContent = profile.streak;
+  </script>
 </body>
 </html>

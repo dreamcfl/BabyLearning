@@ -1,0 +1,145 @@
+/* ============================================================
+ * 宝宝学习台 - 公共样式
+ * 包含：CSS 变量、基础重置、弹窗、通用按钮
+ * 注意：各学科页面为兼容 file:// 协议直接打开，保留了内联样式，
+ *       本文件主要供 index.html 及后续扩展使用。
+ * ============================================================ */
+
+:root {
+  --orange: #FF8C42;
+  --orange-light: #FFB07A;
+  --orange-dark: #E6731C;
+  --teal: #4ECDC4;
+  --teal-light: #7FE0D8;
+  --teal-dark: #3AAFA6;
+  --yellow: #FFD93D;
+  --green: #6BCB77;
+  --green-light: #95DCA0;
+  --red: #FF6B6B;
+  --red-light: #FF9999;
+  --purple: #8B5CF6;
+  --purple-dark: #7C3AED;
+  --purple-light: #C4B5FD;
+  --blue: #4A90E2;
+  --blue-dark: #357ABD;
+  --pink: #FF9FB2;
+  --text: #4A4A4A;
+  --text-light: #888;
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-lg: 24px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 18px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ========== 通用弹窗 ========== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 400;
+  padding: 20px;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal-box {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: 24px 20px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  animation: modalIn 0.3s;
+}
+
+.modal-box h3 {
+  font-size: 1.3rem;
+  margin-bottom: 8px;
+}
+
+.modal-box p {
+  color: var(--text-light);
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-buttons button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 50px;
+}
+
+.btn-modal-cancel {
+  background: #E0E0E0;
+  color: #555;
+}
+
+.btn-modal-confirm {
+  background: var(--red);
+  color: #fff;
+}
+
+.btn-modal-ok {
+  background: var(--green);
+  color: #fff;
+  width: 100%;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74, 144, 226, 0.6); }
+  50% { box-shadow: 0 0 0 12px rgba(74, 144, 226, 0); }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 16px;
+  }
+}

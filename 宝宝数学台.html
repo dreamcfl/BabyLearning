@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>宝宝数学台</title>
+<script src="./js/utils.js"></script>
+<script src="./js/math-data.js"></script>
+<style>
+/* ========== 基础重置与变量 ========== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { font-size: 18px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFF0E8 100%);
+  color: #333;
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
+  -webkit-font-smoothing: antialiased;
+}
+::root {
+  --orange: #FF8C42;
+  --orange-dark: #E6731C;
+  --orange-light: #FFB07A;
+  --green: #6BCB77;
+  --green-light: #95DCA0;
+  --teal: #4ECDC4;
+  --blue: #4A90E2;
+  --yellow: #FFD93D;
+  --red: #FF6B6B;
+  --purple: #B19CD9;
+  --text: #4A4A4A;
+  --text-light: #888;
+  --shadow: 0 4px 16px rgba(0,0,0,0.08);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-lg: 24px;
+}
+
+/* ========== 顶部栏 ========== */
+.topbar {
+  background: linear-gradient(135deg, #FF8C42 0%, #E6731C 100%);
+  color: #fff;
+  padding: 16px 20px 14px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(230,115,28,0.3);
+}
+.topbar-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.topbar-title { font-size: 1.4rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+.topbar-title a { color: #fff; text-decoration: none; }
+.topbar-actions { display: flex; gap: 10px; align-items: center; font-size: 0.9rem; }
+.topbar-actions .points { background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 50px; font-weight: 700; }
+.mode-tabs { display: flex; background: rgba(255,255,255,0.25); border-radius: 50px; padding: 3px; margin-top: 12px; }
+.mode-tab {
+  flex: 1; text-align: center; padding: 8px 0; font-size: 0.85rem; font-weight: 700;
+  color: rgba(255,255,255,0.85); border-radius: 50px; cursor: pointer; transition: all 0.3s;
+  border: none; background: transparent; min-height: 44px;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+}
+.mode-tab.active { background: #fff; color: #E6731C; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+/* ========== 主容器 ========== */
+.container { max-width: 720px; margin: 0 auto; padding: 16px; }
+.card { background: #fff; border-radius: var(--radius); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.card-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; color: #E6731C; }
+
+/* ========== 游戏通用 ========== */
+.game-stage { text-align: center; }
+.game-hint { font-size: 1rem; color: #666; margin-bottom: 16px; font-weight: 600; }
+.practice-feedback { margin-top: 14px; padding: 12px; border-radius: var(--radius-sm); font-size: 1rem; font-weight: 700; display: none; text-align: center; }
+.practice-feedback.show { display: block; }
+.practice-feedback.success { background: #D4EDDA; color: #155724; }
+.practice-feedback.fail { background: #FFE0E0; color: #721C24; }
+.practice-next {
+  background: #FF8C42; color: #fff; border: none; padding: 14px 32px; border-radius: 50px;
+  font-size: 1.1rem; font-weight: 700; cursor: pointer; margin-top: 14px; min-height: 50px; display: none;
+}
+.practice-next.show { display: inline-block; }
+.game-done { text-align: center; padding: 20px; }
+.game-done .title-done { font-size: 1.3rem; font-weight: 800; color: #6BCB77; margin-bottom: 6px; }
+.game-done .sub-done { color: #888; }
+
+/* ========== 数数字 ========== */
+.count-display { font-size: 1.1rem; color: #666; margin-bottom: 14px; }
+.count-items { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 18px; }
+.count-item { font-size: 2.4rem; width: 58px; height: 58px; display: flex; align-items: center; justify-content: center; background: #FFF5E6; border-radius: 12px; }
+.count-options { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.count-btn {
+  width: 56px; height: 56px; border-radius: 50%; border: 3px solid #FFB07A; background: #fff;
+  font-size: 1.5rem; font-weight: 900; color: #E6731C; cursor: pointer; transition: all 0.15s;
+}
+.count-btn:active { transform: scale(0.92); background: #FFF5E6; }
+
+/* ========== 比大小 ========== */
+.compare-box { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 18px; }
+.compare-card {
+  flex: 1; max-width: 140px; background: linear-gradient(135deg, #FFF5E6 0%, #FFE8D6 100%);
+  border: 3px solid #FFB07A; border-radius: var(--radius); padding: 16px 10px; cursor: pointer;
+  transition: all 0.15s;
+}
+.compare-card:active { transform: scale(0.95); }
+.compare-card .cb-num { font-size: 3rem; font-weight: 900; color: #E6731C; line-height: 1; }
+.compare-card .cb-items { font-size: 1.6rem; margin-top: 6px; }
+.compare-vs { font-size: 1.5rem; font-weight: 800; color: #888; }
+
+/* ========== 加减法 ========== */
+.math-question { font-size: 2.6rem; font-weight: 900; color: #E6731C; margin-bottom: 18px; letter-spacing: 4px; }
+.math-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 320px; margin: 0 auto; }
+.math-opt {
+  background: #FFF5E6; border: 3px solid #FFB07A; border-radius: var(--radius); padding: 14px;
+  font-size: 1.6rem; font-weight: 800; color: #E6731C; cursor: pointer; transition: all 0.15s;
+}
+.math-opt:active { transform: scale(0.95); }
+.math-opt.correct { border-color: #6BCB77; background: #D4EDDA; animation: bounce 0.4s; }
+.math-opt.wrong { border-color: #FF6B6B; background: #FFE0E0; animation: shake 0.4s; }
+.math-opt.disabled { pointer-events: none; opacity: 0.55; }
+
+/* ========== 图形分类 ========== */
+.shape-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 14px; flex-wrap: wrap; }
+.shape-item {
+  width: 64px; height: 64px; font-size: 2.2rem; display: flex; align-items: center; justify-content: center;
+  background: #fff; border: 2px solid #E0E0E0; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s;
+}
+.shape-item:active { transform: scale(0.92); }
+.shape-item.placed { opacity: 0.3; pointer-events: none; }
+.shape-baskets { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.shape-basket {
+  flex: 1; min-width: 90px; min-height: 100px; border: 3px dashed #FFB07A; border-radius: var(--radius);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 8px 4px;
+  background: #FFFBF7;
+}
+.shape-basket .sb-name { font-size: 0.8rem; color: #888; margin-bottom: 6px; }
+.shape-basket .sb-items { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+
+/* ========== 动画 ========== */
+@keyframes bounce { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+/* ========== 弹窗 ========== */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 400; padding: 20px; }
+.modal-overlay.show { display: flex; }
+.modal-box { background: #fff; border-radius: var(--radius-lg); padding: 24px 20px; max-width: 400px; width: 100%; text-align: center; animation: modalIn 0.3s; }
+.modal-box h3 { font-size: 1.3rem; margin-bottom: 8px; }
+.modal-box p { color: #888; margin-bottom: 16px; font-size: 0.95rem; }
+.modal-buttons { display: flex; gap: 10px; }
+.modal-buttons button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; min-height: 50px; }
+.btn-modal-cancel { background: #E0E0E0; color: #555; }
+.btn-modal-confirm { background: #FF6B6B; color: #fff; }
+.btn-modal-ok { background: #6BCB77; color: #fff; width: 100%; }
+
+@media (max-width: 480px) {
+  html { font-size: 16px; }
+  .container { padding: 12px; }
+  .compare-card .cb-num { font-size: 2.4rem; }
+  .math-question { font-size: 2.2rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-row">
+    <div class="topbar-title">
+      <a href="./index.html">←</a>
+      <span>🔢 宝宝数学台</span>
+    </div>
+    <div class="topbar-actions">
+      <span class="points">💎 <span data-points>0</span></span>
+    </div>
+  </div>
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tab-count" onclick="switchGame('count')">🔢 数数字</button>
+    <button class="mode-tab" id="tab-compare" onclick="switchGame('compare')">⚖️ 比大小</button>
+    <button class="mode-tab" id="tab-addsub" onclick="switchGame('addsub')">➕ 加减法</button>
+    <button class="mode-tab" id="tab-shape" onclick="switchGame('shape')">🔷 图形分类</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div class="card-title">🧮 趣味数学</div>
+    <div id="gameArea"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box" id="modalBox"></div>
+</div>
+
+<script>
+let currentGame = 'count';
+let mathState = { answer: null, answered: false };
+let shapeState = { placed: 0, total: 0 };
+
+function init() {
+  switchGame('count');
+  initCommonUI();
+}
+
+function switchGame(key) {
+  currentGame = key;
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + key).classList.add('active');
+  renderGame();
+}
+
+function renderGame() {
+  if (currentGame === 'count') renderCount();
+  else if (currentGame === 'compare') renderCompare();
+  else if (currentGame === 'addsub') renderAddSub();
+  else if (currentGame === 'shape') renderShape();
+}
+
+function updateMathStats(gameKey, isCorrect) {
+  updateStreak();
+  const data = getSubjectData('math');
+  if (!data.stats) data.stats = { count: 0, compare: 0, addsub: 0, shape: 0, correct: 0, total: 0 };
+  data.stats[gameKey] = (data.stats[gameKey] || 0) + 1;
+  data.stats.total += 1;
+  if (isCorrect) data.stats.correct += 1;
+  saveSubjectData('math', data);
+}
+
+// ========== 数数字 ==========
+function renderCount() {
+  const { count, item } = makeCount(9);
+  mathState = { answer: count, answered: false };
+
+  const itemsHtml = Array(count).fill(`<div class="count-item">${item.emoji}</div>`).join('');
+  const options = shuffle([count, Math.max(1, count - 1), count + 1, count + 2]);
+
+  document.getElementById('gameArea').innerHTML = `
+    <div class="game-hint">数一数，一共有几个${item.name}？</div>
+    <div class="count-items">${itemsHtml}</div>
+    <div class="count-options">
+      ${options.map(n => `<button class="count-btn" onclick="pickCount(${n}, this)">${n}</button>`).join('')}
+    </div>
+    <div class="practice-feedback" id="practiceFeedback"></div>
+    <div style="text-align:center;"><button class="practice-next" id="practiceNext" onclick="renderCount()">下一题</button></div>
+  `;
+}
+
+function pickCount(n, btn) {
+  if (mathState.answered) return;
+  mathState.answered = true;
+
+  const isCorrect = n === mathState.answer;
+  const feedback = document.getElementById('practiceFeedback');
+  const nextBtn = document.getElementById('practiceNext');
+  document.querySelectorAll('.count-btn').forEach(b => b.style.pointerEvents = 'none');
+
+  if (isCorrect) {
+    btn.style.background = '#D4EDDA';
+    btn.style.borderColor = '#6BCB77';
+    feedback.className = 'practice-feedback success show';
+    feedback.textContent = '数对啦！+2 分';
+    addPoints(2, '数学数数字');
+  } else {
+    btn.style.background = '#FFE0E0';
+    btn.style.borderColor = '#FF6B6B';
+    feedback.className = 'practice-feedback fail show';
+    feedback.textContent = `一共有 ${mathState.answer} 个哦`;
+  }
+  updateMathStats('count', isCorrect);
+  nextBtn.classList.add('show');
+}
+
+// ========== 比大小 ==========
+function renderCompare() {
+  const { a, b } = makeCompare(9);
+  mathState = { answer: a > b ? 'a' : 'b', answered: false };
+  const item = MATH_ITEMS[Math.floor(Math.random() * MATH_ITEMS.length)];
+
+  document.getElementById('gameArea').innerHTML = `
+    <div class="game-hint">哪边的${item.name}更多？点一点</div>
+    <div class="compare-box">
+      <div class="compare-card" onclick="pickCompare('a', this)">
+        <div class="cb-num">${a}</div>
+        <div class="cb-items">${Array(a).fill(item.emoji).join('')}</div>
+      </div>
+      <div class="compare-vs">VS</div>
+      <div class="compare-card" onclick="pickCompare('b', this)">
+        <div class="cb-num">${b}</div>
+        <div class="cb-items">${Array(b).fill(item.emoji).join('')}</div>
+      </div>
+    </div>
+    <div class="practice-feedback" id="practiceFeedback"></div>
+    <div style="text-align:center;"><button class="practice-next" id="practiceNext" onclick="renderCompare()">下一题</button></div>
+  `;
+}
+
+function pickCompare(side, card) {
+  if (mathState.answered) return;
+  mathState.answered = true;
+
+  const isCorrect = side === mathState.answer;
+  const feedback = document.getElementById('practiceFeedback');
+  const nextBtn = document.getElementById('practiceNext');
+  document.querySelectorAll('.compare-card').forEach(c => c.style.pointerEvents = 'none');
+
+  if (isCorrect) {
+    card.style.borderColor = '#6BCB77';
+    card.style.background = '#D4EDDA';
+    feedback.className = 'practice-feedback success show';
+    feedback.textContent = '你真会比较！+2 分';
+    addPoints(2, '数学比大小');
+  } else {
+    card.style.borderColor = '#FF6B6B';
+    card.style.background = '#FFE0E0';
+    feedback.className = 'practice-feedback fail show';
+    feedback.textContent = '这边不是最多的哦~';
+  }
+  updateMathStats('compare', isCorrect);
+  nextBtn.classList.add('show');
+}
+
+// ========== 加减法 ==========
+function renderAddSub() {
+  const q = makeAddSub(10);
+  mathState = { answer: q.a, answered: false };
+
+  const options = shuffle([q.a, q.a + 1, Math.max(0, q.a - 1), q.a + 2]);
+
+  document.getElementById('gameArea').innerHTML = `
+    <div class="game-hint">算一算，等于多少呢？</div>
+    <div class="math-question">${q.q} = ?</div>
+    <div class="math-options">
+      ${options.map(n => `<button class="math-opt" onclick="pickAddSub(${n}, this)">${n}</button>`).join('')}
+    </div>
+    <div class="practice-feedback" id="practiceFeedback"></div>
+    <div style="text-align:center;"><button class="practice-next" id="practiceNext" onclick="renderAddSub()">下一题</button></div>
+  `;
+}
+
+function pickAddSub(n, btn) {
+  if (mathState.answered) return;
+  mathState.answered = true;
+
+  const isCorrect = n === mathState.answer;
+  const feedback = document.getElementById('practiceFeedback');
+  const nextBtn = document.getElementById('practiceNext');
+  document.querySelectorAll('.math-opt').forEach(b => b.classList.add('disabled'));
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    feedback.className = 'practice-feedback success show';
+    feedback.textContent = '算对啦！+3 分';
+    addPoints(3, '数学加减法');
+  } else {
+    btn.classList.add('wrong');
+    feedback.className = 'practice-feedback fail show';
+    feedback.textContent = `正确答案是 ${mathState.answer}`;
+  }
+  updateMathStats('addsub', isCorrect);
+  nextBtn.classList.add('show');
+}
+
+// ========== 图形分类 ==========
+function renderShape() {
+  const target = MATH_SHAPES[Math.floor(Math.random() * MATH_SHAPES.length)];
+  const pool = [];
+  MATH_SHAPES.forEach((s, i) => {
+    const count = s.name === target.name ? 5 : Math.floor(Math.random() * 2) + 1;
+    for (let j = 0; j < count; j++) pool.push(s);
+  });
+  shuffle(pool);
+
+  shapeState = { target: target.name, placed: 0, total: pool.filter(s => s.name === target.name).length };
+
+  document.getElementById('gameArea').innerHTML = `
+    <div class="game-hint">把 ${target.emoji} ${target.name} 放到篮子里</div>
+    <div class="shape-row" id="shapePool">
+      ${pool.map((s, i) => `<div class="shape-item" data-name="${s.name}" data-i="${i}" onclick="placeShape(this)">${s.emoji}</div>`).join('')}
+    </div>
+    <div class="shape-baskets">
+      ${MATH_SHAPES.map(s => `
+        <div class="shape-basket" data-basket="${s.name}">
+          <div class="sb-name">${s.name}</div>
+          <div class="sb-items"></div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="practice-feedback" id="practiceFeedback"></div>
+    <div style="text-align:center;"><button class="practice-next" id="practiceNext" onclick="renderShape()">下一题</button></div>
+  `;
+}
+
+function placeShape(el) {
+  const name = el.dataset.name;
+  const basket = document.querySelector(`.shape-basket[data-basket="${name}"] .sb-items`);
+  if (!basket) return;
+
+  el.classList.add('placed');
+  const clone = document.createElement('div');
+  clone.textContent = el.textContent;
+  clone.style.fontSize = '1.6rem';
+  basket.appendChild(clone);
+
+  if (name === shapeState.target) {
+    shapeState.placed += 1;
+    if (shapeState.placed >= shapeState.total) {
+      const fb = document.getElementById('practiceFeedback');
+      fb.className = 'practice-feedback success show';
+      fb.textContent = '分类完成！+3 分 🎉';
+      addPoints(3, '数学图形分类');
+      updateMathStats('shape', true);
+      document.getElementById('practiceNext').classList.add('show');
+    }
+  }
+}
+
+// ========== 弹窗 ==========
+function showMathModal(type, message, callback) {
+  const overlay = document.getElementById('modalOverlay');
+  const box = document.getElementById('modalBox');
+  if (type === 'confirm') {
+    box.innerHTML = `<h3>确认</h3><p>${message}</p>
+      <div class="modal-buttons">
+        <button class="btn-modal-cancel" onclick="closeMathModal()">取消</button>
+        <button class="btn-modal-confirm" onclick="modalMathConfirm()">确定</button>
+      </div>`;
+  } else {
+    box.innerHTML = `<h3>提示</h3><p>${message}</p>
+      <div class="modal-buttons"><button class="btn-modal-ok" onclick="modalMathOk()">好的</button></div>`;
+  }
+  overlay.classList.add('show');
+  window._mathModalCallback = callback;
+}
+function modalMathConfirm() { closeMathModal(); if (window._mathModalCallback) window._mathModalCallback(); }
+function modalMathOk() { closeMathModal(); if (window._mathModalCallback) window._mathModalCallback(); }
+function closeMathModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+
+init();
+</script>
+
+</body>
+</html>
