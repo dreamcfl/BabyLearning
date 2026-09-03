@@ -171,9 +171,10 @@ const Speech = {
           u.lang = lang;
           u.rate = rate;
           u.volume = 1;
-          u.pitch = 1;
-          const v = this.pickVoice(lang);
-          if (v) u.voice = v;
+          u.pitch = 1.05;
+          // 统一使用系统默认语音，与宝宝识字台保持一致
+          // const v = this.pickVoice(lang);
+          // if (v) u.voice = v;
 
           u.onstart = () => {
             started = true;

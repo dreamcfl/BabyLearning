@@ -184,6 +184,7 @@ function speakText(text, lang = 'zh-CN', rate = 0.85) {
   const u = new SpeechSynthesisUtterance(text);
   u.lang = lang;
   u.rate = settings.speechRate || rate;
+  u.pitch = 1.05;
   window.speechSynthesis.speak(u);
 }
 

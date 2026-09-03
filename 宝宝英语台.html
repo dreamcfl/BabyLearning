@@ -53,7 +53,7 @@ body {
   box-shadow: 0 2px 12px rgba(53,122,189,0.3);
 }
 .topbar-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.topbar-title { font-size: 1.4rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+.topbar-title { font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
 .topbar-title a { color: #fff; text-decoration: none; }
 .topbar-actions { display: flex; gap: 10px; align-items: center; font-size: 0.9rem; }
 .topbar-actions .points { background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 50px; font-weight: 700; }
@@ -149,17 +149,56 @@ body {
 .spell-hint { text-align: center; color: #666; margin-bottom: 12px; font-size: 1rem; }
 .spell-img { font-size: 4rem; text-align: center; margin-bottom: 8px; }
 
-/* ========== 游戏：找朋友 ========== */
-.match-board { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 360px; margin: 0 auto; }
-.match-card {
-  background: #fff; border: 3px solid #B8D6FF; border-radius: var(--radius);
-  min-height: 80px; display: flex; align-items: center; justify-content: center;
-  font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+/* ========== 游戏：找朋友（连线配对） ========== */
+.match-connect {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 80px;
+  max-width: 500px;
+  margin: 0 auto;
+  position: relative;
 }
-.match-card:active { transform: scale(0.95); }
-.match-card.selected { border-color: #FFD93D; background: #FFFBE6; }
-.match-card.matched { border-color: #6BCB77; background: #D4EDDA; opacity: 0.7; pointer-events: none; }
-.match-card.wrong { animation: shake 0.4s; }
+.match-col {
+  display: grid;
+  grid-template-rows: repeat(6, 1fr);
+  gap: 10px;
+  flex: 1;
+}
+.match-item {
+  background: #fff; border: 3px solid #B8D6FF; border-radius: var(--radius);
+  min-height: 78px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  padding: 8px;
+}
+.match-item:active { transform: scale(0.96); }
+.match-item.selected { border-color: #FFD93D; background: #FFFBE6; }
+.match-item.matched { border-color: #6BCB77; background: #D4EDDA; opacity: 0.7; pointer-events: none; }
+.match-item.wrong { animation: shake 0.4s; }
+.match-lines {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+.match-line {
+  position: absolute;
+  height: 3px;
+  background: linear-gradient(90deg, #6BCB77, #4ECDC4);
+  border-radius: 3px;
+  transform-origin: left center;
+  z-index: 1;
+  box-shadow: 0 2px 6px rgba(107, 203, 119, 0.3);
+}
+.match-hint {
+  text-align: center;
+  color: var(--text-light);
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
 
 /* ========== 反馈与动画 ========== */
 .practice-feedback { margin-top: 14px; padding: 12px; border-radius: var(--radius-sm); font-size: 1rem; font-weight: 700; display: none; text-align: center; }
@@ -237,7 +276,7 @@ body {
 let currentGame = 'cards';
 let currentCategory = 'animals';
 let practiceState = { answerWord: null, answered: false };
-let matchState = { first: null, matched: 0, lock: false };
+let matchState = { selectedLeft: null, selectedRight: null, matched: 0, lock: false };
 
 // 初始化
 function init() {
@@ -442,63 +481,112 @@ function placeLetter(chip) {
   }
 }
 
-// ========== 找朋友 ==========
+// ========== 找朋友（左右连线配对） ==========
 function renderMatch() {
   const words = getCategoryWords().slice(0, 6);
-  const cards = [];
-  words.forEach(w => {
-    cards.push({ id: w.en, type: 'word', text: w.en, emoji: w.emoji });
-    cards.push({ id: w.en, type: 'cn', text: w.cn, emoji: w.emoji });
-  });
-  shuffle(cards);
+  const left = shuffle(words.map(w => ({ id: w.en, text: w.en, type: 'word' })));
+  const right = shuffle(words.map(w => ({ id: w.en, text: w.cn, emoji: w.emoji, type: 'cn' })));
 
-  matchState = { first: null, matched: 0, lock: false };
+  matchState = { selectedLeft: null, selectedRight: null, matched: 0, lock: false };
 
   document.getElementById('gameArea').innerHTML = `
-    <div class="match-board" id="matchBoard">
-      ${cards.map((c, i) => `
-        <div class="match-card" data-i="${i}" data-id="${c.id}" data-type="${c.type}" onclick="pickMatch(this)">
-          ${c.type === 'word' ? `<div>${c.text}</div>` : `<div style="font-size:1.8rem;">${c.emoji}</div><div style="font-size:0.85rem;">${c.text}</div>`}
-        </div>
-      `).join('')}
+    <div class="match-hint">👈 点左边英文，再点右边对应的中文/图片 👉</div>
+    <div class="match-connect" id="matchConnect">
+      <div class="match-col" id="matchLeft">
+        ${left.map(c => `
+          <div class="match-item" data-id="${c.id}" data-side="left" onclick="pickMatchLine(this)">
+            <div>${c.text}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="match-lines" id="matchLines"></div>
+      <div class="match-col" id="matchRight">
+        ${right.map(c => `
+          <div class="match-item" data-id="${c.id}" data-side="right" onclick="pickMatchLine(this)">
+            <div style="font-size:1.8rem;">${c.emoji}</div>
+            <div style="font-size:0.85rem;">${c.text}</div>
+          </div>
+        `).join('')}
+      </div>
     </div>
     <div class="practice-feedback" id="practiceFeedback"></div>
   `;
 }
 
-function pickMatch(el) {
-  if (matchState.lock || el.classList.contains('matched') || el.classList.contains('selected')) return;
+function pickMatchLine(el) {
+  if (matchState.lock || el.classList.contains('matched')) return;
+
+  const side = el.dataset.side;
+  const key = side === 'left' ? 'selectedLeft' : 'selectedRight';
+
+  // 取消同一边之前的选中
+  if (matchState[key] && matchState[key] !== el) {
+    matchState[key].classList.remove('selected');
+  }
 
   el.classList.add('selected');
-  if (!matchState.first) {
-    matchState.first = el;
-    return;
-  }
+  matchState[key] = el;
 
-  const a = matchState.first, b = el;
-  if (a.dataset.id === b.dataset.id && a.dataset.type !== b.dataset.type) {
-    a.classList.add('matched'); b.classList.add('matched');
-    a.classList.remove('selected'); b.classList.remove('selected');
-    matchState.first = null;
-    matchState.matched++;
-    speak(ENGLISH_WORDS.find(w => w.en === a.dataset.id).en);
-    if (matchState.matched >= 6) {
-      const fb = document.getElementById('practiceFeedback');
-      fb.className = 'practice-feedback success show';
-      fb.textContent = '全部配对成功！+5 分 🎉';
-      addPoints(5, '英语找朋友通关');
-      updateEnglishStats('match');
+  // 两边都选中后判断是否匹配
+  if (matchState.selectedLeft && matchState.selectedRight) {
+    const a = matchState.selectedLeft;
+    const b = matchState.selectedRight;
+    if (a.dataset.id === b.dataset.id) {
+      a.classList.add('matched');
+      b.classList.add('matched');
+      a.classList.remove('selected');
+      b.classList.remove('selected');
+      drawMatchLine(a, b);
+      matchState.selectedLeft = null;
+      matchState.selectedRight = null;
+      matchState.matched++;
+      speak(ENGLISH_WORDS.find(w => w.en === a.dataset.id).en);
+      if (matchState.matched >= 6) {
+        const fb = document.getElementById('practiceFeedback');
+        fb.className = 'practice-feedback success show';
+        fb.textContent = '全部连线成功！+5 分 🎉';
+        addPoints(5, '英语找朋友通关');
+        updateEnglishStats('match');
+      }
+    } else {
+      matchState.lock = true;
+      a.classList.add('wrong');
+      b.classList.add('wrong');
+      setTimeout(() => {
+        a.classList.remove('selected', 'wrong');
+        b.classList.remove('selected', 'wrong');
+        matchState.selectedLeft = null;
+        matchState.selectedRight = null;
+        matchState.lock = false;
+      }, 700);
     }
-  } else {
-    matchState.lock = true;
-    a.classList.add('wrong'); b.classList.add('wrong');
-    setTimeout(() => {
-      a.classList.remove('selected', 'wrong');
-      b.classList.remove('selected', 'wrong');
-      matchState.first = null;
-      matchState.lock = false;
-    }, 700);
   }
+}
+
+function drawMatchLine(a, b) {
+  const container = document.getElementById('matchConnect');
+  const lines = document.getElementById('matchLines');
+  if (!container || !lines) return;
+
+  const rectA = a.getBoundingClientRect();
+  const rectB = b.getBoundingClientRect();
+  const rectContainer = container.getBoundingClientRect();
+
+  const x1 = rectA.right - rectContainer.left;
+  const y1 = rectA.top + rectA.height / 2 - rectContainer.top;
+  const x2 = rectB.left - rectContainer.left;
+  const y2 = rectB.top + rectB.height / 2 - rectContainer.top;
+
+  const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+  const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+
+  const line = document.createElement('div');
+  line.className = 'match-line';
+  line.style.width = length + 'px';
+  line.style.left = x1 + 'px';
+  line.style.top = y1 + 'px';
+  line.style.transform = `rotate(${angle}deg)`;
+  lines.appendChild(line);
 }
 
 // ========== 统计 ==========
